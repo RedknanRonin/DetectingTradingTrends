@@ -1,0 +1,16 @@
+{
+  "stream_rows": 1855645,
+  "reference_rows": 1855645,
+  "matched_rows": 1855645,
+  "missing_in_stream": 0,
+  "extra_in_stream": 0,
+  "close_mismatch": 0,
+  "ema38_max_rel": 3.490181264478596e-15,
+  "ema100_max_rel": 6.615973658715947e-15,
+  "advice_mismatch": 0,
+  "stream_buy": 2799,
+  "stream_sell": 3580,
+  "ref_buy": 2799,
+  "ref_sell": 3580,
+  "pass": true
+}

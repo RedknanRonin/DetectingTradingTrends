@@ -1,0 +1,452 @@
+[00:08:57] profiling full week
+{
+  "events_total": 289116808,
+  "symbols_total": 5502,
+  "events_with_last": 59708052,
+  "events_last_zero": 316382,
+  "system_time_whole_seconds_frac": 0.9991351489070088,
+  "by_exchange": {
+    "NL": 79991190,
+    "FR": 158331078,
+    "ETR": 50794540
+  },
+  "by_sectype": {
+    "E": 239521477,
+    "I": 49595331
+  },
+  "events_by_day": {
+    "null": [
+      5,
+      0
+    ],
+    "08-11-2021": [
+      53994551,
+      11794520
+    ],
+    "09-11-2021": [
+      58811870,
+      11900121
+    ],
+    "10-11-2021": [
+      64591844,
+      12068273
+    ],
+    "11-11-2021": [
+      55547846,
+      11835403
+    ],
+    "12-11-2021": [
+      56111183,
+      11793353
+    ],
+    "13-11-2021": [
+      33396,
+      0
+    ],
+    "14-11-2021": [
+      26113,
+      0
+    ]
+  },
+  "events_price_gt0": 59391670,
+  "price_events_trading_time_missing": 0,
+  "price_events_by_sectype": {
+    "I": 49082962,
+    "E": 10308708
+  },
+  "price_events_by_exchange": {
+    "FR": 21367417,
+    "NL": 6028250,
+    "ETR": 31996003
+  },
+  "symbols_with_price": 4970,
+  "price_events_with_trading_date": 4912043,
+  "trading_date_vs_date_mismatch": 0,
+  "top_k_share_price_events": {
+    "1": 0.0027,
+    "10": 0.0271,
+    "50": 0.1348,
+    "100": 0.269,
+    "500": 0.5476,
+    "1000": 0.6564
+  },
+  "price_events_per_symbol_quantiles": {
+    "0.5": 10510.0,
+    "0.9": 12918.0,
+    "0.99": 159460.0
+  },
+  "price_events_per_symbol_max": 162379,
+  "arrival_minus_trading_ms_quantiles": {
+    "0.01": -960.0,
+    "0.1": -760.0,
+    "0.5": -310.0,
+    "0.9": 0.0,
+    "0.99": 0.0,
+    "0.999": 20.0
+  },
+  "global_lateness_frac_gt_ms": {
+    "0": 0.448429,
+    "100": 0.17522,
+    "1000": 0.000184,
+    "5000": 0.000124,
+    "30000": 0.000109,
+    "60000": 9.3e-05,
+    "300000": 9.3e-05
+  },
+  "per_symbol_lateness_frac_gt_ms": {
+    "0": 9.3e-05,
+    "100": 9.3e-05,
+    "1000": 9.3e-05,
+    "5000": 9.3e-05,
+    "30000": 9.3e-05,
+    "60000": 9.3e-05,
+    "300000": 9.3e-05
+  },
+  "global_lateness_ms_quantiles": {
+    "0.5": 0.0,
+    "0.9": 168.0,
+    "0.99": 294.0,
+    "0.999": 409.0,
+    "0.9999": 33747.0
+  },
+  "global_lateness_ms_max": 64565000,
+  "peak_price_events_per_minute": 56748
+}
+[00:12:59] profiling Monday (weights for balanced partitioning of later days)
+{
+  "events_total": 53994554,
+  "symbols_total": 5493,
+  "events_with_last": 11856732,
+  "events_last_zero": 62212,
+  "system_time_whole_seconds_frac": 0.9992533328729377,
+  "by_exchange": {
+    "NL": 14457112,
+    "FR": 29549814,
+    "ETR": 9987628
+  },
+  "by_sectype": {
+    "E": 44098800,
+    "I": 9895754
+  },
+  "events_by_day": {
+    "null": [
+      3,
+      0
+    ],
+    "08-11-2021": [
+      53994551,
+      11794520
+    ]
+  },
+  "events_price_gt0": 11794520,
+  "price_events_trading_time_missing": 0,
+  "price_events_by_sectype": {
+    "I": 9811246,
+    "E": 1983274
+  },
+  "price_events_by_exchange": {
+    "FR": 4233311,
+    "NL": 1178795,
+    "ETR": 6382414
+  },
+  "symbols_with_price": 4840,
+  "price_events_with_trading_date": 920799,
+  "trading_date_vs_date_mismatch": 0,
+  "top_k_share_price_events": {
+    "1": 0.0027,
+    "10": 0.0272,
+    "50": 0.1357,
+    "100": 0.2709,
+    "500": 0.5453,
+    "1000": 0.6548
+  },
+  "price_events_per_symbol_quantiles": {
+    "0.5": 2102.0,
+    "0.9": 2583.0,
+    "0.99": 31901.0
+  },
+  "price_events_per_symbol_max": 32371,
+  "arrival_minus_trading_ms_quantiles": {
+    "0.01": -960.0,
+    "0.1": -757.0,
+    "0.5": -308.0,
+    "0.9": 0.0,
+    "0.99": 0.0,
+    "0.999": 20.0
+  },
+  "global_lateness_frac_gt_ms": {
+    "0": 0.453236,
+    "100": 0.169646,
+    "1000": 9.7e-05,
+    "5000": 3.6e-05,
+    "30000": 1.8e-05,
+    "60000": 0.0,
+    "300000": 0.0
+  },
+  "per_symbol_lateness_frac_gt_ms": {
+    "0": 0.0,
+    "100": 0.0,
+    "1000": 0.0,
+    "5000": 0.0,
+    "30000": 0.0,
+    "60000": 0.0,
+    "300000": 0.0
+  },
+  "global_lateness_ms_quantiles": {
+    "0.5": 0.0,
+    "0.9": 161.0,
+    "0.99": 282.0,
+    "0.999": 334.0,
+    "0.9999": 961.0
+  },
+  "global_lateness_ms_max": 64517,
+  "peak_price_events_per_minute": 53254
+}
+wrote 50 symbols to config/subscriptions.txt
+[00:13:33] validation K=0: streaming (emit all)
+{
+  "wall_s": 165.0335886478424,
+  "rows": 289116808,
+  "price_events": 59391670,
+  "throughput_rows_per_s": 1751866.4556033686,
+  "throughput_price_events_per_s": 359876.25601921044,
+  "load_imbalance": 1.2576148208528841,
+  "result_latency_s": {
+    "p50": 0.10101521015167236,
+    "p90": 0.1629640340805054,
+    "p99": 0.2287829732894898,
+    "p99.9": 1.5516081647872926,
+    "max": 1.5531682968139648,
+    "mean": 0.12027753351204742
+  },
+  "cpu_process_tree_pct": {
+    "p50": 113.10000000000001,
+    "p90": 139.1,
+    "p99": 165.50000000000006,
+    "p99.9": 191.05200000000136,
+    "max": 197.9,
+    "mean": 115.57507788161996
+  },
+  "late_dropped": 0,
+  "stale_timestamp_dropped": 5506
+}
+[00:16:22] validation K=0: reference
+1855645 (symbol, window) rows, 4970 symbols, 2799 BUY, 3580 SELL -> results/validation/reference_k0.parquet
+{
+  "stream_rows": 1855645,
+  "reference_rows": 1855645,
+  "matched_rows": 1855645,
+  "missing_in_stream": 0,
+  "extra_in_stream": 0,
+  "close_mismatch": 0,
+  "ema38_max_rel": 3.490181264478596e-15,
+  "ema100_max_rel": 6.615973658715947e-15,
+  "advice_mismatch": 0,
+  "stream_buy": 2799,
+  "stream_sell": 3580,
+  "ref_buy": 2799,
+  "ref_sell": 3580,
+  "pass": true
+}
+[00:17:50] validation K=38: streaming (emit all)
+{
+  "wall_s": 194.9418511390686,
+  "rows": 289116808,
+  "price_events": 59391670,
+  "throughput_rows_per_s": 1483092.554577972,
+  "throughput_price_events_per_s": 304663.51711019134,
+  "load_imbalance": 1.2576148208528841,
+  "result_latency_s": {
+    "p50": 0.1274641752243042,
+    "p90": 0.16176974773406982,
+    "p99": 0.2542720651626587,
+    "p99.9": 1.9568365466594704,
+    "max": 1.9582915306091309,
+    "mean": 0.14034168625601054
+  },
+  "cpu_process_tree_pct": {
+    "p50": 113.0,
+    "p90": 136.93,
+    "p99": 180.07799999999995,
+    "p99.9": 335.79940000000875,
+    "max": 423.5,
+    "mean": 116.42315789473685
+  },
+  "late_dropped": 0,
+  "stale_timestamp_dropped": 5506
+}
+[00:21:10] validation K=38: reference
+1855645 (symbol, window) rows, 4970 symbols, 2799 BUY, 3580 SELL -> results/validation/reference_k38.parquet
+{
+  "stream_rows": 1855645,
+  "reference_rows": 1855645,
+  "matched_rows": 1855645,
+  "missing_in_stream": 0,
+  "extra_in_stream": 0,
+  "close_mismatch": 0,
+  "ema38_max_rel": 3.490181264478596e-15,
+  "ema100_max_rel": 6.615973658715947e-15,
+  "advice_mismatch": 0,
+  "stream_buy": 2799,
+  "stream_sell": 3580,
+  "ref_buy": 2799,
+  "ref_sell": 3580,
+  "pass": true
+}
+[00:22:33] full week, subscribed symbols, default configuration (8 cores)
+{
+  "wall_s": 194.1081612110138,
+  "rows": 289116808,
+  "price_events": 59391670,
+  "throughput_rows_per_s": 1489462.401767347,
+  "throughput_price_events_per_s": 305972.03965801146,
+  "load_imbalance": 1.2576148208528841,
+  "result_latency_s": {
+    "p50": 0.12707173824310303,
+    "p90": 0.15758068561553956,
+    "p99": 0.21146696805953968,
+    "p99.9": 1.062705795526505,
+    "max": 2.5919487476348877,
+    "mean": 0.135858005941461
+  },
+  "cpu_process_tree_pct": {
+    "p50": 112.4,
+    "p90": 136.26,
+    "p99": 168.066,
+    "p99.9": 385.39640000000463,
+    "max": 508.70000000000005,
+    "mean": 116.26754617414247
+  },
+  "late_dropped": 0,
+  "stale_timestamp_dropped": 5506
+}
+warm-up run (discarded) ...
+[00:26:32] cores_cores1_r0 ...
+    {'wall_s': 40.148, 'rows_per_s': 1464861, 'price_events_per_s': 296403, 'load_imbalance': 1.0, 'lat_p50_ms': 129.48, 'late_dropped': 0}
+[00:27:15] cores_cores1_r1 ...
+    {'wall_s': 41.202, 'rows_per_s': 1427406, 'price_events_per_s': 288824, 'load_imbalance': 1.0, 'lat_p50_ms': 133.99, 'late_dropped': 0}
+[00:27:58] cores_cores2_r0 ...
+    {'wall_s': 39.353, 'rows_per_s': 1494483, 'price_events_per_s': 302397, 'load_imbalance': 1.0149, 'lat_p50_ms': 130.97, 'late_dropped': 0}
+[00:28:39] cores_cores2_r1 ...
+    {'wall_s': 37.504, 'rows_per_s': 1568151, 'price_events_per_s': 317303, 'load_imbalance': 1.0149, 'lat_p50_ms': 123.12, 'late_dropped': 0}
+[00:29:19] cores_cores4_r0 ...
+    {'wall_s': 38.798, 'rows_per_s': 1515855, 'price_events_per_s': 306721, 'load_imbalance': 1.1818, 'lat_p50_ms': 125.64, 'late_dropped': 0}
+[00:30:00] cores_cores4_r1 ...
+    {'wall_s': 39.538, 'rows_per_s': 1487492, 'price_events_per_s': 300982, 'load_imbalance': 1.1818, 'lat_p50_ms': 128.44, 'late_dropped': 0}
+[00:30:41] cores_cores6_r0 ...
+    {'wall_s': 36.472, 'rows_per_s': 1612509, 'price_events_per_s': 326279, 'load_imbalance': 1.0775, 'lat_p50_ms': 118.87, 'late_dropped': 0}
+[00:31:20] cores_cores6_r1 ...
+    {'wall_s': 38.37, 'rows_per_s': 1532776, 'price_events_per_s': 310145, 'load_imbalance': 1.0775, 'lat_p50_ms': 123.15, 'late_dropped': 0}
+[00:32:00] cores_cores8_r0 ...
+    {'wall_s': 38.348, 'rows_per_s': 1533655, 'price_events_per_s': 310323, 'load_imbalance': 1.2554, 'lat_p50_ms': 123.36, 'late_dropped': 0}
+[00:32:41] cores_cores8_r1 ...
+    {'wall_s': 38.496, 'rows_per_s': 1527749, 'price_events_per_s': 309128, 'load_imbalance': 1.2554, 'lat_p50_ms': 123.04, 'late_dropped': 0}
+[00:33:22] cores_cores14_r0 ...
+    {'wall_s': 39.069, 'rows_per_s': 1505352, 'price_events_per_s': 304596, 'load_imbalance': 1.1646, 'lat_p50_ms': 128.83, 'late_dropped': 0}
+[00:34:04] cores_cores14_r1 ...
+    {'wall_s': 39.737, 'rows_per_s': 1480023, 'price_events_per_s': 299471, 'load_imbalance': 1.1646, 'lat_p50_ms': 125.73, 'late_dropped': 0}
+[00:34:47] preload_cores1_r0 ...
+    {'wall_s': 2.014, 'rows_per_s': 29206134, 'price_events_per_s': 5909632, 'load_imbalance': 1.0, 'lat_p50_ms': 64.81, 'late_dropped': 0}
+[00:35:29] preload_cores1_r1 ...
+    {'wall_s': 1.958, 'rows_per_s': 30030052, 'price_events_per_s': 6076346, 'load_imbalance': 1.0, 'lat_p50_ms': 62.59, 'late_dropped': 0}
+[00:36:12] preload_cores2_r0 ...
+    {'wall_s': 1.176, 'rows_per_s': 50004868, 'price_events_per_s': 10118093, 'load_imbalance': 1.0149, 'lat_p50_ms': 20.47, 'late_dropped': 0}
+[00:36:51] preload_cores2_r1 ...
+    {'wall_s': 1.048, 'rows_per_s': 56118140, 'price_events_per_s': 11355066, 'load_imbalance': 1.0149, 'lat_p50_ms': 19.45, 'late_dropped': 0}
+[00:37:30] preload_cores4_r0 ...
+    {'wall_s': 0.946, 'rows_per_s': 62184505, 'price_events_per_s': 12582547, 'load_imbalance': 1.1818, 'lat_p50_ms': 7.72, 'late_dropped': 0}
+[00:38:10] preload_cores4_r1 ...
+    {'wall_s': 0.833, 'rows_per_s': 70587095, 'price_events_per_s': 14282745, 'load_imbalance': 1.1818, 'lat_p50_ms': 5.6, 'late_dropped': 0}
+[00:38:52] preload_cores6_r0 ...
+    {'wall_s': 0.693, 'rows_per_s': 84913017, 'price_events_per_s': 17181484, 'load_imbalance': 1.0775, 'lat_p50_ms': 2.34, 'late_dropped': 0}
+[00:39:32] preload_cores6_r1 ...
+    {'wall_s': 0.608, 'rows_per_s': 96715935, 'price_events_per_s': 19569711, 'load_imbalance': 1.0775, 'lat_p50_ms': 4.41, 'late_dropped': 0}
+[00:40:16] preload_cores8_r0 ...
+    {'wall_s': 0.591, 'rows_per_s': 99561337, 'price_events_per_s': 20145456, 'load_imbalance': 1.2554, 'lat_p50_ms': 4.1, 'late_dropped': 0}
+[00:40:59] preload_cores8_r1 ...
+    {'wall_s': 0.602, 'rows_per_s': 97765768, 'price_events_per_s': 19782137, 'load_imbalance': 1.2554, 'lat_p50_ms': 4.18, 'late_dropped': 0}
+[00:41:37] preload_cores14_r0 ...
+    {'wall_s': 0.846, 'rows_per_s': 69521009, 'price_events_per_s': 14067031, 'load_imbalance': 1.1646, 'lat_p50_ms': 7.97, 'late_dropped': 0}
+[00:42:20] preload_cores14_r1 ...
+    {'wall_s': 0.833, 'rows_per_s': 70627091, 'price_events_per_s': 14290838, 'load_imbalance': 1.1646, 'lat_p50_ms': 8.62, 'late_dropped': 0}
+summary: results\bench\tue_scaling\summary.csv
+[00:43:03] partition_cores2_partitioninghash_r0 ...
+    {'wall_s': 1.112, 'rows_per_s': 52885051, 'price_events_per_s': 10700876, 'load_imbalance': 1.0149, 'lat_p50_ms': 20.78, 'late_dropped': 0}
+[00:43:45] partition_cores2_partitioninghash_r1 ...
+    {'wall_s': 1.111, 'rows_per_s': 52927035, 'price_events_per_s': 10709371, 'load_imbalance': 1.0149, 'lat_p50_ms': 20.2, 'late_dropped': 0}
+[00:44:24] partition_cores2_partitioningbalanced_r0 ...
+    {'wall_s': 1.114, 'rows_per_s': 52769756, 'price_events_per_s': 10677547, 'load_imbalance': 1.0022, 'lat_p50_ms': 20.07, 'late_dropped': 0}
+[00:45:04] partition_cores2_partitioningbalanced_r1 ...
+    {'wall_s': 1.087, 'rows_per_s': 54106209, 'price_events_per_s': 10947967, 'load_imbalance': 1.0022, 'lat_p50_ms': 28.35, 'late_dropped': 0}
+[00:45:45] partition_cores4_partitioninghash_r0 ...
+    {'wall_s': 0.764, 'rows_per_s': 77023914, 'price_events_per_s': 15585185, 'load_imbalance': 1.1818, 'lat_p50_ms': 6.93, 'late_dropped': 0}
+[00:46:24] partition_cores4_partitioninghash_r1 ...
+    {'wall_s': 0.884, 'rows_per_s': 66544677, 'price_events_per_s': 13464794, 'load_imbalance': 1.1818, 'lat_p50_ms': 5.72, 'late_dropped': 0}
+[00:47:04] partition_cores4_partitioningbalanced_r0 ...
+    {'wall_s': 0.779, 'rows_per_s': 75520866, 'price_events_per_s': 15281055, 'load_imbalance': 1.0061, 'lat_p50_ms': 10.25, 'late_dropped': 0}
+[00:47:46] partition_cores4_partitioningbalanced_r1 ...
+    {'wall_s': 0.731, 'rows_per_s': 80413427, 'price_events_per_s': 16271027, 'load_imbalance': 1.0061, 'lat_p50_ms': 9.64, 'late_dropped': 0}
+[00:48:27] partition_cores8_partitioninghash_r0 ...
+    {'wall_s': 0.625, 'rows_per_s': 94069028, 'price_events_per_s': 19034131, 'load_imbalance': 1.2554, 'lat_p50_ms': 4.31, 'late_dropped': 0}
+[00:49:08] partition_cores8_partitioninghash_r1 ...
+    {'wall_s': 0.657, 'rows_per_s': 89465939, 'price_events_per_s': 18102732, 'load_imbalance': 1.2554, 'lat_p50_ms': 4.42, 'late_dropped': 0}
+[00:49:50] partition_cores8_partitioningbalanced_r0 ...
+    {'wall_s': 0.6, 'rows_per_s': 98058569, 'price_events_per_s': 19841383, 'load_imbalance': 1.0092, 'lat_p50_ms': 6.62, 'late_dropped': 0}
+[00:50:31] partition_cores8_partitioningbalanced_r1 ...
+    {'wall_s': 0.598, 'rows_per_s': 98345679, 'price_events_per_s': 19899477, 'load_imbalance': 1.0092, 'lat_p50_ms': 6.78, 'late_dropped': 0}
+[00:51:13] partition_cores14_partitioninghash_r0 ...
+    {'wall_s': 0.848, 'rows_per_s': 69320250, 'price_events_per_s': 14026409, 'load_imbalance': 1.1646, 'lat_p50_ms': 8.69, 'late_dropped': 0}
+[00:51:55] partition_cores14_partitioninghash_r1 ...
+    {'wall_s': 1.116, 'rows_per_s': 52692530, 'price_events_per_s': 10661920, 'load_imbalance': 1.1646, 'lat_p50_ms': 11.87, 'late_dropped': 0}
+[00:52:39] partition_cores14_partitioningbalanced_r0 ...
+    {'wall_s': 0.994, 'rows_per_s': 59153920, 'price_events_per_s': 11969332, 'load_imbalance': 1.0285, 'lat_p50_ms': 9.91, 'late_dropped': 0}
+[00:53:22] partition_cores14_partitioningbalanced_r1 ...
+    {'wall_s': 0.873, 'rows_per_s': 67358376, 'price_events_per_s': 13629440, 'load_imbalance': 1.0285, 'lat_p50_ms': 9.09, 'late_dropped': 0}
+summary: results\bench\tue_partition\summary.csv
+[00:54:06] lateness_cores4_lateness_ms0_r0 ...
+    {'wall_s': 41.049, 'rows_per_s': 1432714, 'price_events_per_s': 289898, 'load_imbalance': 1.1818, 'lat_p50_ms': 131.23, 'late_dropped': 76}
+[00:54:49] lateness_cores4_lateness_ms0_r1 ...
+    {'wall_s': 39.262, 'rows_per_s': 1497921, 'price_events_per_s': 303093, 'load_imbalance': 1.1818, 'lat_p50_ms': 126.4, 'late_dropped': 76}
+[00:55:30] lateness_cores4_lateness_ms10_r0 ...
+    {'wall_s': 39.099, 'rows_per_s': 1504171, 'price_events_per_s': 304357, 'load_imbalance': 1.1818, 'lat_p50_ms': 129.12, 'late_dropped': 28}
+[00:56:12] lateness_cores4_lateness_ms10_r1 ...
+    {'wall_s': 38.95, 'rows_per_s': 1509948, 'price_events_per_s': 305526, 'load_imbalance': 1.1818, 'lat_p50_ms': 128.69, 'late_dropped': 28}
+[00:56:53] lateness_cores4_lateness_ms100_r0 ...
+    {'wall_s': 39.667, 'rows_per_s': 1482635, 'price_events_per_s': 299999, 'load_imbalance': 1.1818, 'lat_p50_ms': 127.47, 'late_dropped': 3}
+[00:57:35] lateness_cores4_lateness_ms100_r1 ...
+    {'wall_s': 39.89, 'rows_per_s': 1474353, 'price_events_per_s': 298324, 'load_imbalance': 1.1818, 'lat_p50_ms': 127.52, 'late_dropped': 3}
+[00:58:17] lateness_cores4_lateness_ms500_r0 ...
+    {'wall_s': 40.168, 'rows_per_s': 1464147, 'price_events_per_s': 296259, 'load_imbalance': 1.1818, 'lat_p50_ms': 129.03, 'late_dropped': 0}
+[00:59:00] lateness_cores4_lateness_ms500_r1 ...
+    {'wall_s': 40.649, 'rows_per_s': 1446811, 'price_events_per_s': 292751, 'load_imbalance': 1.1818, 'lat_p50_ms': 129.09, 'late_dropped': 0}
+[00:59:43] lateness_cores4_lateness_ms1000_r0 ...
+    {'wall_s': 40.519, 'rows_per_s': 1451462, 'price_events_per_s': 293692, 'load_imbalance': 1.1818, 'lat_p50_ms': 129.66, 'late_dropped': 0}
+[01:00:25] lateness_cores4_lateness_ms1000_r1 ...
+    {'wall_s': 39.479, 'rows_per_s': 1489712, 'price_events_per_s': 301431, 'load_imbalance': 1.1818, 'lat_p50_ms': 127.22, 'late_dropped': 0}
+[01:01:07] block_cores4_block_mb1_r0 ...
+    {'wall_s': 44.848, 'rows_per_s': 1311357, 'price_events_per_s': 265343, 'load_imbalance': 1.1818, 'lat_p50_ms': 11.24, 'late_dropped': 0}
+[01:01:54] block_cores4_block_mb1_r1 ...
+    {'wall_s': 46.616, 'rows_per_s': 1261622, 'price_events_per_s': 255279, 'load_imbalance': 1.1818, 'lat_p50_ms': 11.65, 'late_dropped': 0}
+[01:02:43] block_cores4_block_mb4_r0 ...
+    {'wall_s': 39.428, 'rows_per_s': 1491624, 'price_events_per_s': 301818, 'load_imbalance': 1.1818, 'lat_p50_ms': 32.45, 'late_dropped': 0}
+[01:03:24] block_cores4_block_mb4_r1 ...
+    {'wall_s': 39.345, 'rows_per_s': 1494766, 'price_events_per_s': 302454, 'load_imbalance': 1.1818, 'lat_p50_ms': 33.07, 'late_dropped': 0}
+[01:04:05] block_cores4_block_mb16_r0 ...
+    {'wall_s': 41.913, 'rows_per_s': 1403200, 'price_events_per_s': 283927, 'load_imbalance': 1.1818, 'lat_p50_ms': 134.41, 'late_dropped': 0}
+[01:04:49] block_cores4_block_mb16_r1 ...
+    {'wall_s': 39.602, 'rows_per_s': 1485085, 'price_events_per_s': 300495, 'load_imbalance': 1.1818, 'lat_p50_ms': 127.0, 'late_dropped': 0}
+[01:05:31] block_cores4_block_mb64_r0 ...
+    {'wall_s': 43.368, 'rows_per_s': 1356098, 'price_events_per_s': 274396, 'load_imbalance': 1.1818, 'lat_p50_ms': 517.4, 'late_dropped': 0}
+[01:06:17] block_cores4_block_mb64_r1 ...
+    {'wall_s': 41.521, 'rows_per_s': 1416440, 'price_events_per_s': 286606, 'load_imbalance': 1.1818, 'lat_p50_ms': 517.48, 'late_dropped': 0}
+summary: results\bench\tue_knobs\summary.csv
+wrote results\figures\scaling.pdf
+wrote results\figures\partitioning.pdf
+wrote results\figures\lateness.pdf
+wrote results\figures\blocksize.pdf
+wrote results\figures\workload_rate.pdf
+wrote results\figures\long_tail.pdf
+wrote results\figures\symbol_A169S8_ETR.pdf
+wrote results\figures\symbol_A0X7J3_ETR.pdf
+wrote results\figures\symbol_A2FG24_ETR.pdf
+[01:07:06] done
