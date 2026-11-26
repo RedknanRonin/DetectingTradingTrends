@@ -9,6 +9,10 @@ Views
   * Advisory feed - newest advisories first; live-tails advisories_live.jsonl while a run
                     is in progress.
   * Run metrics   - throughput, latency, CPU and per-worker load of the selected run.
+  * Replay        - sidebar controls (first / previous / play-pause / next / last, a window
+                    slider and a speed setting): every view shows the state "as of" the
+                    selected window, so the week can be replayed and advisories raised in
+                    the current window are highlighted.
 """
 import json
 from pathlib import Path
@@ -69,6 +73,73 @@ with st.sidebar:
     t_min, t_max = df["window_start"].min(), df["window_start"].max()
     st.caption(f"{df['symbol'].n_unique()} symbols · windows {t_min:%a %d.%m %H:%M} – {t_max:%a %d.%m %H:%M}")
 
+    # ---------------------------------------------------------------- replay controls
+    # A cursor over the evaluated windows (nights/weekends have none, so they are skipped).
+    # Every view shows the state "as of" the cursor; Play advances it on a timer.
+    st.header("Replay")
+    wins = df["win"].unique().sort().to_list()
+    labels = dict(zip(df["win"], df["window_start"]))
+    ss = st.session_state
+    # ss.pos is the source of truth; the slider widget mirrors it (a widget's own state may
+    # not be changed by code after the widget is created, e.g. by the play timer).
+    if ss.get("replay_run") != str(run) or ss.get("pos") not in wins:
+        ss.replay_run, ss.pos, ss.playing = str(run), wins[-1], False
+    idx = wins.index(ss.pos)
+
+    def _move(to_idx):
+        ss.pos = wins[max(0, min(len(wins) - 1, to_idx))]
+
+    def _toggle_play():
+        if not ss.playing and ss.pos == wins[-1]:
+            ss.pos = wins[0]  # pressing play at the end restarts the replay
+        ss.playing = not ss.playing
+        ss.last_tick = 0.0
+
+    b = st.columns(5)
+    b[0].button("⏮", on_click=_move, args=(0,), help="first window", width="stretch")
+    b[1].button("◀", on_click=_move, args=(idx - 1,), help="previous window", width="stretch")
+    b[2].button("⏸" if ss.playing else "▶", on_click=_toggle_play, help="play / pause",
+                type="primary", width="stretch")
+    b[3].button("▶▶", on_click=_move, args=(idx + 1,), help="next window", width="stretch")
+    b[4].button("⏭", on_click=_move, args=(len(wins) - 1,), help="last window (show all)",
+                width="stretch")
+    ss.pos_slider = ss.pos
+
+    def _slid():
+        ss.pos = ss.pos_slider
+
+    st.select_slider("Current window", options=wins, key="pos_slider", on_change=_slid,
+                     format_func=lambda w: f"{labels[w]:%a %d.%m %H:%M}")
+    speed = st.select_slider("Speed (windows per second)", options=[1, 2, 5, 12, 36], value=2)
+
+    import time as _time
+
+    @st.fragment(run_every=0.25 if ss.playing else None)
+    def _ticker():
+        # Advance only on timer ticks: the fragment also runs as part of every full rerun,
+        # so the elapsed-time check prevents a rerun from immediately advancing again.
+        if not ss.playing:
+            return
+        now = _time.time()
+        last = ss.get("last_tick", 0.0) or now - 1.0 / speed
+        steps = int((now - last) * speed)  # windows due since the last advance
+        if steps < 1:
+            return
+        ss.last_tick = now
+        i = min(wins.index(ss.pos) + steps, len(wins) - 1)
+        ss.pos = wins[i]
+        if i == len(wins) - 1:
+            ss.playing = False
+        st.rerun(scope="app")
+
+    _ticker()
+    st.caption(f"Window {idx + 1} of {len(wins)}" + (" · playing" if ss.playing else ""))
+
+df_all = df
+cursor_win = ss.pos
+now_window = labels[cursor_win]
+df = df.filter(pl.col("win") <= cursor_win)  # state as of the replay cursor
+
 tab_board, tab_symbol, tab_feed, tab_metrics = st.tabs(
     ["Signal board", "Symbol detail", "Advisory feed", "Run metrics"])
 
@@ -86,6 +157,9 @@ with tab_board:
     board = latest.join(last_adv, on="symbol", how="left").sort(
         ["last_advice_at", "symbol"], descending=[True, False], nulls_last=True)
 
+    fresh = df.filter((pl.col("win") == cursor_win) & (pl.col("advice") != 0))
+    st.markdown(f"**State as of window {now_window:%a %d.%m %H:%M}** · "
+                f"{fresh.height} new advisor{'y' if fresh.height == 1 else 'ies'} in this window")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Symbols", board.height)
     c2.metric("Bullish now (EMA38 > EMA100)", int((board["spread_pct"] > 0).sum()))
@@ -110,10 +184,14 @@ with tab_board:
         adv = {1: "&#9650; BUY", -1: "&#9660; SELL"}.get(r["last_advice"], "&ndash;")
         adv_col = {1: GREEN, -1: RED}.get(r["last_advice"], GREY)
         when = f"{r['last_advice_at']:%a %H:%M}" if r["last_advice_at"] else ""
+        new = r["last_advice_at"] == now_window  # advisory raised in the current replay window
+        ring = f"box-shadow:0 0 0 2px {adv_col};" if new else ""
+        badge = (f' <small style="background:{adv_col};color:white;padding:0 4px;border-radius:3px">'
+                 f'NEW</small>') if new else ""
         tiles.append(
-            f'<div style="border-left:6px solid {GREEN if bull else RED};padding:6px 10px;'
+            f'<div style="border-left:6px solid {GREEN if bull else RED};padding:6px 10px;{ring}'
             f'border-radius:4px;background:rgba(127,127,127,0.08)">'
-            f'<b>{r["symbol"]}</b> <small>{"Index" if r["sectype"] == "I" else "Equity"}</small><br>'
+            f'<b>{r["symbol"]}</b> <small>{"Index" if r["sectype"] == "I" else "Equity"}</small>{badge}<br>'
             f'<span style="font-size:1.25em">{r["close"]:.4g}</span>'
             f'<span style="color:{GREEN if bull else RED}">&nbsp;{r["spread_pct"]:+.2f}%</span><br>'
             f'<small style="color:{adv_col}">{adv} {when}</small></div>')
@@ -124,9 +202,14 @@ with tab_board:
 
 # ------------------------------------------------------------------ symbol detail
 with tab_symbol:
-    syms = board.sort("windows", descending=True)["symbol"].to_list()  # most data first
+    # options from the whole run, so the selection stays stable while the replay advances
+    syms = df_all.group_by("symbol").len().sort("len", descending=True)["symbol"].to_list()
     sym = st.selectbox("Symbol (sorted by number of windows)", syms)
+    d_all = df_all.filter(pl.col("symbol") == sym)
     d = df.filter(pl.col("symbol") == sym).sort("win")
+    if d.is_empty():
+        st.info(f"No price windows for {sym} yet at {now_window:%a %d.%m %H:%M}.")
+        d = d_all.head(0)
     x = d["window_start"].to_list()
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.72, 0.28],
                         vertical_spacing=0.04)
@@ -153,6 +236,8 @@ with tab_symbol:
                       legend=dict(orientation="h", y=1.04))
     # hide nights and weekends (no trading) so the trading sessions sit next to each other
     fig.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"]), dict(bounds=[22, 7], pattern="hour")])
+    # fixed time axis = the symbol's whole run, so the lines grow during replay
+    fig.update_xaxes(range=[d_all["window_start"].min(), d_all["window_start"].max()])
     fig.update_yaxes(title_text="price", row=1, col=1)
     fig.update_yaxes(title_text="spread %", row=2, col=1)
     st.plotly_chart(fig, width="stretch")
@@ -170,7 +255,7 @@ with tab_feed:
             st.dataframe(live.reverse().head(200), width="stretch", height=300)
     live_feed()
     adv = df.filter(pl.col("advice") != 0).sort("win", descending=True)
-    st.subheader(f"All advisories in run ({adv.height})")
+    st.subheader(f"Advisories up to {now_window:%a %d.%m %H:%M} ({adv.height})")
     per_hour = (adv.with_columns(hour=pl.col("window_start").dt.truncate("1h"),
                                  kind=pl.when(pl.col("advice") == 1).then(pl.lit("BUY")).otherwise(pl.lit("SELL")))
                 .group_by(["hour", "kind"]).len().sort("hour"))
@@ -180,6 +265,7 @@ with tab_feed:
             p = per_hour.filter(pl.col("kind") == kind)
             f2.add_trace(go.Bar(x=p["hour"], y=p["len"], name=kind, marker_color=color))
         f2.update_layout(barmode="stack", height=260, margin=dict(l=10, r=10, t=10, b=10))
+        f2.update_xaxes(range=[df_all["window_start"].min(), df_all["window_start"].max()])
         f2.update_xaxes(rangebreaks=[dict(bounds=["sat", "mon"]), dict(bounds=[22, 7], pattern="hour")])
         st.plotly_chart(f2, width="stretch")
     st.dataframe(adv.with_columns(advice=pl.when(pl.col("advice") == 1).then(pl.lit("BUY")).otherwise(pl.lit("SELL")))
