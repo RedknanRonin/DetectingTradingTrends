@@ -67,7 +67,7 @@ def source_main(cfg: RunConfig, worker_queues, results_q):
     weights = load_weights(cfg.weights_file) if cfg.partitioning == "balanced" else None
     part = Partitioner(cfg.workers, cfg.partitioning, weights)
     src = Source(cfg.files, cfg.workers, part, cfg.lateness_ms, cfg.block_size, cfg.max_rows,
-                 use_threads=(threads or 2) > 1)
+                 use_threads=(threads or 2) > 1, stale_ms=cfg.stale_ms)
     subs = load_subscriptions(cfg.subscriptions_file)
     batches = src.batches()
     if cfg.preload:

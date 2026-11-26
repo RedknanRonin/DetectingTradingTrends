@@ -23,7 +23,7 @@ from tickstream.schema import read_csv_lazy  # noqa: E402
 W = 5 * 60 * 1000
 
 
-def reference(files, max_rows=None, warmup=38) -> pl.DataFrame:
+def reference(files, max_rows=None, warmup=38, stale_ms=300_000) -> pl.DataFrame:
     lf = pl.concat([read_csv_lazy(f) for f in files])
     if max_rows:
         lf = lf.head(max_rows)
@@ -38,6 +38,12 @@ def reference(files, max_rows=None, warmup=38) -> pl.DataFrame:
         )
         .with_columns(win=pl.col("t") // W)
     )
+    if stale_ms is not None:
+        # same data-quality rule as the streaming source: a Trading time far behind the arrival
+        # time (system Date + Time) is an invalid stamp -> dropped
+        arrival = (pl.concat_str([pl.col("Date"), pl.lit(" "), pl.col("Time")])
+                   .str.strptime(pl.Datetime("ms"), "%d-%m-%Y %H:%M:%S%.f").dt.epoch("ms"))
+        ev = ev.filter(pl.col("t") >= arrival - stale_ms)
     closes = (
         ev.sort(["ID", "win", "t", "row"])
         .group_by(["ID", "win"], maintain_order=True)
@@ -57,7 +63,7 @@ def reference(files, max_rows=None, warmup=38) -> pl.DataFrame:
         prev38=pl.col("ema38").shift(1, fill_value=0.0).over("ID"),
         prev100=pl.col("ema100").shift(1, fill_value=0.0).over("ID"),
     )
-    eligible = pl.col("n") >= warmup
+    eligible = pl.col("n") >= max(1, warmup)  # no signal in a symbol's first window (D11)
     buy = (pl.col("ema38") > pl.col("ema100")) & (pl.col("prev38") <= pl.col("prev100")) & eligible
     sell = (pl.col("ema38") < pl.col("ema100")) & (pl.col("prev38") >= pl.col("prev100")) & eligible
     out = out.with_columns(
@@ -72,9 +78,10 @@ def main():
     ap.add_argument("--out", default="results/reference.parquet")
     ap.add_argument("--max-rows", type=int, default=None)
     ap.add_argument("--warmup", type=int, default=38)
+    ap.add_argument("--stale-ms", type=int, default=300_000, help="-1 = off")
     a = ap.parse_args()
     files = [g for f in a.files for g in (sorted(glob.glob(f)) or [f])]
-    df = reference(files, a.max_rows, a.warmup)
+    df = reference(files, a.max_rows, a.warmup, None if a.stale_ms < 0 else a.stale_ms)
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     df.write_parquet(a.out)
     print(f"{df.height} (symbol, window) rows, {df['symbol'].n_unique()} symbols, "

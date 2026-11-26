@@ -73,14 +73,20 @@ Hardware: Intel i7-12700H (6P + 8E cores = 14 cores / 20 threads), 15.7 GB RAM, 
 - **Alternatives:** separate parallel normalization stage to Parquet; parallel parser pool.
 - **Known limitation:** the single source caps scalability; measure and explain (Amdahl).
 
-## D11. Advisory warm-up period (deliberate deviation from the literal spec)
-- The literal formulas emit a BUY for every symbol in its first window (EMA_0 = 0 ⇒
-  EMA38 > EMA100 immediately). This is an initialization artifact.
-- **Chosen:** suppress advisories until a symbol has had K price windows. EMA values
-  themselves follow the spec exactly (EMA_0 = 0).
-- K is configurable; default K = 38 (proposal). K = 0 reproduces the literal spec, so both
-  can be shown in the report.
-- **Alternatives:** follow spec literally; suppress only the first window.
+## D11. No advisory in a symbol's first window (+ optional warm-up)
+- **Problem:** read literally, the formulas emit a BUY for every symbol in its first window:
+  with EMA_0 = 0, the first window gives EMA38 = 2/39·Close > EMA100 = 2/101·Close while both
+  previous values are 0 (0 ≤ 0), so Eq. (1)–(2) hold. This is a fake crossover caused by the
+  initialisation, not a price movement (4,906 such BUYs on Tue+Wed, one per symbol).
+- **Chosen (user decision):** the crossover check is skipped in a symbol's first window, since
+  there is no real previous EMA to cross from. This is the only window where the artefact
+  occurs. EMA values themselves follow the spec exactly (EMA_0 = 0). Implemented identically in
+  the operator and the reference (`eligible = windows_before >= max(1, K)`).
+- **Optional warm-up K** (`--warmup`): additionally require K previous windows before any
+  advisory; K = 0 or 1 now means "first-window rule only". Default currently K = 38.
+- **Alternatives considered:** seed both EMAs with the first Close (removes the artefact and
+  the hours-long EMA start-up, but changes the EMA values defined by the spec); rely on the
+  warm-up only (artefact still emitted when K = 0); follow the spec literally.
 
 ## D12. Correctness verification: independent reference implementation + unit tests
 - A simple batch implementation (polars) computes per-window Close, EMA38/EMA100 and
@@ -170,6 +176,24 @@ Numbers from the first ~13M rows of Monday; re-run on the full week for the repo
 - **I13. EMA visibility in the price-zoomed chart.** Because EMA_0 = 0, EMAs sit far below the
   price until they converge; the price-zoomed y-axis therefore includes only converged EMA
   points (within 25% of Close) and states how many windows' EMAs are out of view.
+- **I14. Invalid (stale) trading timestamps are dropped, in stream AND reference (user decision).**
+  Found by the Tue+Wed validation: one burst on Wed 10.11 at 18:56:11–13 (system time) of
+  5,506 *index* price events from 1,812 symbols stamped `Trading time = 01:00:00.000`
+  (≈18 h behind arrival; several different prices per symbol within the same second, i.e. a
+  replay, not live prices). The stream dropped them as late (correct under D5), while the
+  reference put them into a Wed 01:00 window, inserting a spurious window before Wednesday's
+  open → 1,812 missing rows, EMA deviations up to 49%, ~60 differing advisories.
+  Rule: a price event whose Trading time is more than 5 min *behind* its arrival time
+  (system Date + Time) is an invalid stamp: dropped and counted as `stale_timestamp_dropped`
+  (not as late), before it can affect the watermark. Same rule in `scripts/reference.py`.
+  No other day so far has any price event more than 1 s behind arrival.
+  Alternatives considered: repair with arrival time (would inject replayed prices as new
+  Closes after market close); keep and explain the validation mismatch.
+- **Not an anomaly: Xetra closing auction.** ~500 ETR equities per day (Tue, Wed) have
+  `Trading time` 17:30:xx while their system `Time` is earlier (up to 8.5 h). Their file
+  position matches ~17:30 and 17:30 is Xetra's closing auction, so the trading time is right
+  and `Time` is the record's previous update. They do not advance the watermark beyond real
+  time and are untouched by I14 (which only checks timestamps far *behind* arrival).
 - **Measured event rates** (partial Monday, 09:00–11:30, all exchanges open): all events
   mean 1,850/s (p99 5,500, max 10,285); price events mean 343/s (p99 2,545, max 3,106);
   price events per (symbol, 5-min window): median 20, p99 300, max 1,610.

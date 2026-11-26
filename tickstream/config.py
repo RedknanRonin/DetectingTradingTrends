@@ -14,6 +14,7 @@ class RunConfig:
     partitioning: str = "hash"       # "hash" | "balanced"   (D9)
     weights_file: str | None = None  # per-symbol event counts for balanced partitioning
     lateness_ms: int = 1000          # allowed lateness of the watermark (D5)
+    stale_ms: int | None = 300_000   # Trading time > this behind arrival = invalid stamp (I14)
     warmup_windows: int = 38         # K: windows required before advisories (D11); 0 = literal spec
     subscriptions_file: str | None = None  # one symbol per line (D7); None = subscribe to none
     emit_all: bool = False           # emit window results for ALL symbols (validation runs)

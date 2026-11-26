@@ -14,9 +14,11 @@ HEADER = ("ID,SecType,Date,Time,Ask,Ask volume,Bid,Bid volume,Ask time,Day's hig
 DESC = "#'Unique ID','Security Type'\n"
 
 
-def row(sym, last="", ttime="", tdate="", date="08-11-2021", sectype="E"):
+def row(sym, last="", ttime="", tdate="", date="08-11-2021", sectype="E", systime=None):
     f = [""] * 40  # 39 columns + trailing comma, like the real files
-    f[0], f[1], f[2], f[3] = sym, sectype, date, "09:00:00.000"
+    # arrival (system) time defaults to the trading time truncated to seconds, as in the data
+    systime = systime or ((ttime[:8] + ".000") if ttime else "09:00:00.000")
+    f[0], f[1], f[2], f[3] = sym, sectype, date, systime
     f[21], f[23], f[26] = last, ttime, tdate
     return ",".join(f) + "\n"
 
@@ -99,3 +101,17 @@ def test_balanced_assignment_is_lpt():
 def test_window_alignment_midnight():
     day = 1636329600000
     assert day % WINDOW_MS == 0  # w0 starts at 00:00
+
+
+def test_stale_trading_timestamp_dropped_not_late(tmp_path):
+    rows = [
+        row("A.FR", last="1", ttime="18:55:59.000"),
+        row("PX1.FR", last="7046.17", ttime="01:00:00.000", systime="18:56:11.000", sectype="I"),
+        row("B.FR", last="2", ttime="18:56:12.500"),
+    ]
+    src = Source([write_csv(tmp_path, rows)], 1, Partitioner(1), 1000, 1 << 20)
+    assert [g[1] for g in collect(src)] == ["A.FR", "B.FR"]
+    assert src.stats["stale_timestamp_dropped"] == 1 and src.stats["late_dropped"] == 0
+    off = Source([write_csv(tmp_path, rows, "b.csv")], 1, Partitioner(1), 1000, 1 << 20, stale_ms=None)
+    collect(off)
+    assert off.stats["late_dropped"] == 1  # without the rule it is classified as late instead

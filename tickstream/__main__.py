@@ -20,6 +20,8 @@ def main():
     ap.add_argument("--partitioning", choices=["hash", "balanced"], default="hash")
     ap.add_argument("--weights", default="results/profile/price_events_per_symbol.csv")
     ap.add_argument("--lateness-ms", type=int, default=1000)
+    ap.add_argument("--stale-ms", type=int, default=300_000,
+                    help="drop price events whose Trading time is this far behind arrival (-1 = off)")
     ap.add_argument("--warmup", type=int, default=38)
     ap.add_argument("--subscriptions", default="config/subscriptions.txt")
     ap.add_argument("--emit-all", action="store_true")
@@ -41,11 +43,13 @@ def main():
         warmup_windows=a.warmup, subscriptions_file=a.subscriptions, emit_all=a.emit_all,
         block_size=int(a.block_mb * (1 << 20)), max_rows=a.max_rows, source_threads=a.source_threads,
         preload=a.preload, minute_bars=not a.no_bars,
+        stale_ms=None if a.stale_ms < 0 else a.stale_ms,
     )
     m = run(cfg)
     keys = ["wall_s", "rows", "price_events", "throughput_rows_per_s", "throughput_price_events_per_s",
             "load_imbalance", "result_latency_s", "cpu_process_tree_pct"]
-    print(json.dumps({k: m[k] for k in keys} | {"late_dropped": m["source"]["late_dropped"]}, indent=2))
+    print(json.dumps({k: m[k] for k in keys} | {"late_dropped": m["source"]["late_dropped"],
+                                                    "stale_timestamp_dropped": m["source"]["stale_timestamp_dropped"]}, indent=2))
 
 
 if __name__ == "__main__":

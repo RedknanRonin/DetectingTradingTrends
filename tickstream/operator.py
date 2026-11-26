@@ -125,7 +125,10 @@ class WindowEmaOperator:
         new1 = close * self.a1 + prev1 * (1.0 - self.a1)
         new2 = close * self.a2 + prev2 * (1.0 - self.a2)
         self.ema1[sym], self.ema2[sym] = new1, new2
-        eligible = self.nwin[sym] >= self.warmup  # D11 warm-up (K previous windows)
+        # D11: never signal in a symbol's first window. EMA_0 = 0 makes EMA38 > EMA100 there
+        # by construction (2/39 > 2/101), a fake crossover with no real previous EMA to cross
+        # from. Optionally also require K previous windows (warm-up).
+        eligible = self.nwin[sym] >= max(1, self.warmup)
         self.nwin[sym] += 1
         buy = (new1 > new2) & (prev1 <= prev2) & eligible     # Eq. (1),(2)
         sell = (new1 < new2) & (prev1 >= prev2) & eligible    # Eq. (3),(4)

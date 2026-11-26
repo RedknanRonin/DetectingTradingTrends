@@ -72,13 +72,21 @@ def test_events_split_over_batches_and_pending_state():
     assert r["win"].tolist() == [1] and r["close"][0] == 13.0
 
 
-def test_first_window_buy_with_literal_spec_and_suppressed_with_warmup():
-    lit = WindowEmaOperator(warmup_windows=0)
-    r = lit.process(*ev((0, 10, 100.0)), watermark=np.inf, emit_all=True)
-    assert r["advice"][0] == ADVICE_BUY  # EMA38 > EMA100 > 0 after EMA_0 = 0 (spec artifact)
-    wu = WindowEmaOperator(warmup_windows=1)
-    r = wu.process(*ev((0, 10, 100.0)), watermark=np.inf, emit_all=True)
-    assert r["advice"][0] == 0
+def test_no_signal_in_first_window_even_without_warmup():
+    # literal formulas: EMA_0 = 0 -> EMA38 = 2/39*C > EMA100 = 2/101*C, prev 0 <= 0 -> "BUY"
+    op = WindowEmaOperator(warmup_windows=0)
+    r = op.process(*ev((0, 10, 100.0)), watermark=np.inf, emit_all=True)
+    assert r["ema38"][0] > r["ema100"][0] and r["prev38"][0] == r["prev100"][0] == 0
+    assert r["advice"][0] == 0  # fake crossover suppressed (D11)
+
+
+def test_k0_equals_k1_real_crossovers_kept():
+    # only the first window is affected: K=0 and K=1 give identical advisories, real ones kept
+    rows = [(7, i * W + 1, c) for i, c in enumerate(_cross_series())]
+    k0 = WindowEmaOperator(warmup_windows=0).process(*ev(*rows), watermark=np.inf, emit_all=True)
+    k1 = WindowEmaOperator(warmup_windows=1).process(*ev(*rows), watermark=np.inf, emit_all=True)
+    assert k0["advice"].tolist() == k1["advice"].tolist()
+    assert set(k0["advice"][k0["advice"] != 0].tolist()) == {ADVICE_BUY, ADVICE_SELL}
 
 
 def _cross_series():

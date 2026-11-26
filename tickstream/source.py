@@ -18,10 +18,12 @@ import pyarrow.compute as pc
 import pyarrow.csv as pacsv
 
 from .config import WINDOW_MS
-from .schema import COL_DATE, COL_ID, COL_LAST, COL_SECTYPE, COL_TRADING_DATE, COL_TRADING_TIME
+from .schema import (COL_DATE, COL_ID, COL_LAST, COL_SECTYPE, COL_TIME, COL_TRADING_DATE,
+                     COL_TRADING_TIME)
 
 HEADER_SKIP_ROWS = 11  # comment lines before the header; one '#...' description line after it
-SOURCE_COLUMNS = [COL_ID, COL_SECTYPE, COL_DATE, COL_LAST, COL_TRADING_TIME, COL_TRADING_DATE]
+SOURCE_COLUMNS = [COL_ID, COL_SECTYPE, COL_DATE, COL_TIME, COL_LAST, COL_TRADING_TIME, COL_TRADING_DATE]
+STALE_MS_DEFAULT = 5 * 60 * 1000  # Trading time this far behind arrival time = invalid stamp
 _EPOCH = dt.datetime(1970, 1, 1)
 _NO_TIME = -(2**62)  # "no event seen yet" (safe from overflow when subtracting lateness)
 
@@ -144,7 +146,7 @@ def balanced_assignment(weights: dict[str, float], n: int) -> dict[str, int]:
 
 class Source:
     def __init__(self, files, n_workers, partitioner: Partitioner, lateness_ms: int,
-                 block_size: int, max_rows=None, use_threads=True):
+                 block_size: int, max_rows=None, use_threads=True, stale_ms=STALE_MS_DEFAULT):
         self.files = files
         self.n_workers = n_workers
         self.part = partitioner
@@ -152,11 +154,13 @@ class Source:
         self.block_size = block_size
         self.max_rows = max_rows
         self.use_threads = use_threads
+        self.stale_ms = stale_ms
         self.registry = SymbolRegistry()
         self.max_t = _NO_TIME  # max event time seen so far
         self.day_cache: dict[str, int] = {}
         self.invalid_rows = InvalidRowCounter()
         self.stats = dict(rows=0, price_events=0, non_price_events=0, late_dropped=0,
+                          stale_timestamp_dropped=0,
                           invalid_rows_skipped=0, batches=0, read_s=0.0, transform_s=0.0)
 
     @property
@@ -188,6 +192,16 @@ class Source:
                 if self.max_rows and self.stats["rows"] >= self.max_rows:
                     return
 
+    def _days(self, dates: pa.Array) -> np.ndarray:
+        """'DD-MM-YYYY' strings -> epoch ms of that midnight (few distinct values per block)."""
+        enc = pc.dictionary_encode(dates)
+        uniq = enc.dictionary.to_pylist()
+        for d in uniq:
+            if d not in self.day_cache:
+                self.day_cache[d] = _day_ms(d)
+        day = np.array([self.day_cache[d] for d in uniq], dtype=np.int64)
+        return day[enc.indices.to_numpy(zero_copy_only=False)]
+
     def transform(self, rb: pa.RecordBatch):
         n_rows = rb.num_rows
         self.stats["rows"] += n_rows
@@ -201,14 +215,23 @@ class Source:
         if n == 0:
             return [None] * self.n_workers, []
 
-        # event time
-        date = pc.coalesce(rb.column(COL_TRADING_DATE), rb.column(COL_DATE))
-        denc = pc.dictionary_encode(date)
-        for d in denc.dictionary.to_pylist():
-            if d not in self.day_cache:
-                self.day_cache[d] = _day_ms(d)
-        day = np.array([self.day_cache[d] for d in denc.dictionary.to_pylist()], dtype=np.int64)
-        t = day[denc.indices.to_numpy(zero_copy_only=False)] + time_of_day_ms(rb.column(COL_TRADING_TIME))
+        # event time = coalesce(Trading date, Date) + Trading time
+        t = (self._days(pc.coalesce(rb.column(COL_TRADING_DATE), rb.column(COL_DATE)))
+             + time_of_day_ms(rb.column(COL_TRADING_TIME)))
+
+        # Data-quality rule (I14): a Trading time far BEHIND the arrival time (system Date + Time)
+        # is an invalid stamp (e.g. the Wed 18:56 burst of index events stamped 01:00:00.000),
+        # not a late event. Dropped and counted separately, before it can touch the watermark.
+        if self.stale_ms is not None:
+            arrival = self._days(rb.column(COL_DATE)) + time_of_day_ms(rb.column(COL_TIME))
+            stale = t < arrival - self.stale_ms
+            if stale.any():
+                self.stats["stale_timestamp_dropped"] += int(stale.sum())
+                keep = ~stale
+                rb = rb.filter(pa.array(keep))
+                t = t[keep]
+                if rb.num_rows == 0:
+                    return [None] * self.n_workers, []
 
         # symbols -> global ids (only the batch's distinct symbols touch Python)
         ienc = pc.dictionary_encode(rb.column(COL_ID))
