@@ -77,6 +77,7 @@ Important options of `python -m tickstream`:
 | `--emit-all` | Emit results for every symbol, not only subscribed ones |
 | `--preload` | Processing-only mode |
 | `--block-mb` | Source block size |
+| `--no-bars` | Do not build 1-minute OHLC bars for subscribed symbols |
 
 Outputs in `--out`:
 
@@ -84,6 +85,7 @@ Outputs in `--out`:
 |---|---|
 | `windows.parquet` | Per (symbol, window): Close, EMA38, EMA100, previous EMAs, advice |
 | `advisories.parquet` | Advisories only |
+| `bars.parquet` | 1-minute OHLC bars of subscribed symbols (for the dashboard) |
 | `advisories_live.jsonl` | Advisories written while the run is in progress |
 | `metrics.json` | Run metrics |
 | `cpu_timeline.csv` | CPU utilisation over time |

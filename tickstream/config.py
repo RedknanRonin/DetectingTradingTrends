@@ -22,5 +22,6 @@ class RunConfig:
     max_rows: int | None = None      # stop after this many CSV rows (quick tests)
     source_threads: int | None = None  # pyarrow parser threads (None = len(cores) or all)
     live_advisories: bool = True     # append advisories to a JSONL file while running
+    minute_bars: bool = True         # 1-min OHLC bars of subscribed symbols (dashboard)
     preload: bool = False            # parse all input first, then stream from memory
     extra: dict = field(default_factory=dict)

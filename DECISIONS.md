@@ -152,5 +152,19 @@ Numbers from the first ~13M rows of Monday; re-run on the full week for the repo
   benchmarks use a discarded warm-up run. One weekday (~5 GB) fits in the OS page cache; the
   full week (25 GB) does not (16 GB RAM) → full-week runs include disk reads.
 
+- **I10. 1-minute OHLC bars for subscribed symbols (dashboard, user decision).** Workers buffer
+  the price events of *subscribed* symbols only and emit open/high/low/close/count per
+  (symbol, minute) once the watermark passes the minute's end (same mechanism as windows).
+  Visualisation only, not part of Q1/Q2. Consistency check: every window Close equals the close
+  of its last minute bar (2,248/2,248 on partial Monday). Throughput impact not measurable
+  (~605k rows/s with bars). `--no-bars` disables it. Alternatives considered: keep 5-minute
+  granularity only; store raw ticks of subscribed symbols (larger output).
+- **I11. Dashboard replay.** A time cursor ("now"); every view shows only what was known at
+  that time (windows with end <= now, bars with end <= now). Step = 1 minute or 5 minutes.
+  Window values are plotted at the window *end* (when they become known), aligned with candles.
+- **Measured event rates** (partial Monday, 09:00–11:30, all exchanges open): all events
+  mean 1,850/s (p99 5,500, max 10,285); price events mean 343/s (p99 2,545, max 3,106);
+  price events per (symbol, 5-min window): median 20, p99 300, max 1,610.
+
 ## Open questions
 - Default K for the warm-up (currently 38) once full-week crossover counts are known.

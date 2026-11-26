@@ -141,3 +141,42 @@ def test_state_grows_for_large_symbol_ids():
     op = WindowEmaOperator(warmup_windows=0, capacity=4)
     r = op.process(*ev((10_000, 1, 3.0)), watermark=np.inf, emit_all=True)
     assert r["sym"].tolist() == [10_000]
+
+
+# ---------------------------------------------------------------- 1-minute OHLC bars
+from tickstream.operator import MinuteBars  # noqa: E402
+
+M = 60_000
+
+
+def test_minute_bars_ohlc_and_emission_by_watermark():
+    b = MinuteBars()
+    r = b.process(*ev((0, 1_000, 10.0), (0, 20_000, 12.0), (0, 30_000, 9.0), (0, 59_000, 11.0),
+                      (0, M + 5, 20.0)), watermark=M - 1)
+    assert len(r["sym"]) == 0  # minute 0 not yet complete
+    r = b.process(*ev(), watermark=M)
+    assert r["minute"].tolist() == [0]
+    assert (r["open"][0], r["high"][0], r["low"][0], r["close"][0], r["n"][0]) == (10.0, 12.0, 9.0, 11.0, 4)
+    r = b.process(*ev(), watermark=np.inf)
+    assert r["minute"].tolist() == [1] and r["open"][0] == r["close"][0] == 20.0
+
+
+def test_minute_bars_out_of_order_and_late():
+    b = MinuteBars()
+    r = b.process(*ev((1, 50_000, 5.0), (1, 10_000, 4.0)), watermark=M)  # arrival out of order
+    assert (r["open"][0], r["close"][0]) == (4.0, 5.0)
+    b.process(*ev((1, 30_000, 99.0)), watermark=M)  # minute 0 already emitted -> late
+    assert b.late_dropped == 1
+
+
+def test_window_close_equals_last_minute_bar_close():
+    rng = np.random.default_rng(1)
+    t = np.sort(rng.integers(0, 3 * W, 500))
+    sym = rng.integers(0, 3, 500)
+    price = rng.uniform(10, 20, 500)
+    op = WindowEmaOperator(warmup_windows=0)
+    r = op.process(sym, t, price, watermark=np.inf, emit_all=True)
+    bars = MinuteBars().process(sym, t, price, watermark=np.inf)
+    for s, w, c in zip(r["sym"], r["win"], r["close"]):
+        sel = (bars["sym"] == s) & (bars["minute"] * M // W == w)
+        assert bars["close"][sel][-1] == c

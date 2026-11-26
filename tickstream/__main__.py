@@ -28,6 +28,7 @@ def main():
     ap.add_argument("--source-threads", type=int, default=None)
     ap.add_argument("--preload", action="store_true",
                     help="parse everything first, then stream from memory (processing-only)")
+    ap.add_argument("--no-bars", action="store_true", help="do not build 1-minute OHLC bars")
     a = ap.parse_args()
 
     files = []
@@ -39,7 +40,7 @@ def main():
         partitioning=a.partitioning, weights_file=a.weights, lateness_ms=a.lateness_ms,
         warmup_windows=a.warmup, subscriptions_file=a.subscriptions, emit_all=a.emit_all,
         block_size=int(a.block_mb * (1 << 20)), max_rows=a.max_rows, source_threads=a.source_threads,
-        preload=a.preload,
+        preload=a.preload, minute_bars=not a.no_bars,
     )
     m = run(cfg)
     keys = ["wall_s", "rows", "price_events", "throughput_rows_per_s", "throughput_price_events_per_s",

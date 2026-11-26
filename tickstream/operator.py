@@ -133,6 +133,62 @@ class WindowEmaOperator:
                     advice=advice[keep])
 
 
+class MinuteBars:
+    """1-minute OHLC bars for subscribed symbols (visualisation only, not part of Q1/Q2).
+
+    Raw price events of subscribed symbols are buffered until the watermark passes the end
+    of their minute; then each (symbol, minute) is aggregated to open/high/low/close/count.
+    Buffer size is bounded by (subscribed symbols x events per minute + lateness).
+    """
+
+    def __init__(self, bar_ms: int = 60_000):
+        self.bar_ms = bar_ms
+        self.b_sym = np.empty(0, np.int64)
+        self.b_t = np.empty(0, np.int64)
+        self.b_price = np.empty(0, np.float64)
+        self.closed_upto = None  # minutes with index < closed_upto are emitted
+        self.late_dropped = 0
+
+    def process(self, sym, t, price, watermark):
+        sym = np.asarray(sym, dtype=np.int64)
+        t = np.asarray(t, dtype=np.int64)
+        price = np.asarray(price, dtype=np.float64)
+        if self.closed_upto is not None and len(t):
+            ok = t // self.bar_ms >= self.closed_upto  # never re-open an emitted bar
+            self.late_dropped += int((~ok).sum())
+            sym, t, price = sym[ok], t[ok], price[ok]
+        a_sym = np.concatenate((self.b_sym, sym))
+        a_t = np.concatenate((self.b_t, t))
+        a_price = np.concatenate((self.b_price, price))
+
+        if watermark is None:
+            return _empty_bars()
+        close_before = (np.iinfo(np.int64).max if watermark == np.inf
+                        else int(watermark) // self.bar_ms)
+        if self.closed_upto is not None:
+            close_before = max(close_before, self.closed_upto)
+        self.closed_upto = close_before
+
+        minute = a_t // self.bar_ms
+        done = minute < close_before
+        self.b_sym, self.b_t, self.b_price = a_sym[~done], a_t[~done], a_price[~done]
+        if not done.any():
+            return _empty_bars()
+        s, m, tt, p = a_sym[done], minute[done], a_t[done], a_price[done]
+        order = np.lexsort((tt, m, s))  # stable: ties in time keep arrival order
+        s, m, p = s[order], m[order], p[order]
+        start = np.flatnonzero(np.r_[True, (s[1:] != s[:-1]) | (m[1:] != m[:-1])])
+        end = np.r_[start[1:], len(s)] - 1
+        return dict(sym=s[start], minute=m[start], open=p[start], close=p[end],
+                    high=np.maximum.reduceat(p, start), low=np.minimum.reduceat(p, start),
+                    n=(end - start + 1).astype(np.int64))
+
+
+def _empty_bars():
+    return dict(sym=np.empty(0, np.int64), minute=np.empty(0, np.int64), open=np.empty(0),
+                close=np.empty(0), high=np.empty(0), low=np.empty(0), n=np.empty(0, np.int64))
+
+
 def _empty_result():
     return dict(sym=np.empty(0, np.int64), win=np.empty(0, np.int64), close=np.empty(0),
                 ema38=np.empty(0), ema100=np.empty(0), prev38=np.empty(0),

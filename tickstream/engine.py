@@ -100,8 +100,9 @@ def source_main(cfg: RunConfig, worker_queues, results_q):
 # --------------------------------------------------------------------------- worker process
 def worker_main(wid: int, cfg: RunConfig, in_q, results_q):
     pin(cfg.cores)
-    from .operator import WindowEmaOperator
+    from .operator import MinuteBars, WindowEmaOperator
     op = WindowEmaOperator(warmup_windows=cfg.warmup_windows)
+    bars = MinuteBars() if cfg.minute_bars else None  # 1-min OHLC of subscribed symbols
     events = 0
     busy = 0.0
     wait = 0.0
@@ -117,17 +118,29 @@ def worker_main(wid: int, cfg: RunConfig, in_q, results_q):
             res = op.process([], [], [], np.inf, cfg.emit_all)  # flush all open windows
             if len(res["sym"]):
                 results_q.put(("res", wid, msg[2], time.time(), res))
+            if bars is not None:
+                b = bars.process([], [], [], np.inf)
+                if len(b["sym"]):
+                    results_q.put(("bars", wid, b))
             break
         _, seq, t_read, wm, part, subs = msg
         if subs:
             op.subscribe(subs)
         if part is None:
             res = op.process([], [], [], wm, cfg.emit_all)
+            b = bars.process([], [], [], wm) if bars is not None else None
         else:
             sym, t, price = part
             events += len(sym)
             res = op.process(sym, t, price, wm, cfg.emit_all)
+            if bars is not None:
+                m = op.subscribed[sym]  # subscribed symbols only (array sized by op.process)
+                b = bars.process(sym[m], t[m], price[m], wm)
+            else:
+                b = None
         t2 = time.time()
+        if b is not None and len(b["sym"]):
+            results_q.put(("bars", wid, b))
         busy += t2 - t1
         batch_latency.append(t2 - t_read)
         if op.last_evaluated:
@@ -196,6 +209,7 @@ def run(cfg: RunConfig) -> dict:
 
     names, sectypes = {}, {}
     chunks = []
+    bar_chunks = []
     result_latency = []
     worker_stats, source_stats, of_sym = {}, None, None
     live = open(out / "advisories_live.jsonl", "w") if cfg.live_advisories else None
@@ -232,6 +246,8 @@ def run(cfg: RunConfig) -> dict:
                         latency_ms=round((now - t_read) * 1000, 2))) + "\n")
                 if len(adv):
                     live.flush()
+        elif kind == "bars":
+            bar_chunks.append(msg[2])
         elif kind == "stream_start":
             t_stream_start = msg[1]
         elif kind == "worker_stats":
@@ -249,6 +265,7 @@ def run(cfg: RunConfig) -> dict:
     # start-up, and in preload mode the up-front parsing) until the sink has everything.
     wall = t_end - t_stream_start
     _write_results(out, chunks, names, sectypes)
+    _write_bars(out, bar_chunks, names)
     cpu = np.array([(s[1], s[2]) for s in sampler.samples]) if sampler.samples else np.zeros((0, 2))
     ev = [worker_stats[w]["events"] for w in range(cfg.workers)]
     close_lat = np.concatenate([np.asarray(worker_stats[w].pop("close_latency_raw"), dtype=float)
@@ -281,6 +298,17 @@ def run(cfg: RunConfig) -> dict:
 
 def _fmt_ts(ms: int) -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(ms / 1000))
+
+
+def _write_bars(out: Path, chunks, names):
+    import polars as pl
+    if not chunks:
+        return
+    cols = {k: np.concatenate([c[k] for c in chunks]) for k in chunks[0]}
+    pl.DataFrame(cols).with_columns(
+        symbol=pl.Series([names.get(int(s), str(s)) for s in cols["sym"]], dtype=pl.Utf8),
+        minute_start=pl.from_epoch(pl.Series(cols["minute"].astype(np.int64) * 60_000), time_unit="ms"),
+    ).sort(["symbol", "minute"]).write_parquet(out / "bars.parquet")
 
 
 def _write_results(out: Path, chunks, names, sectypes):
