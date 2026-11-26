@@ -26,8 +26,14 @@ st.set_page_config(page_title="Trading Trends", layout="wide")
 
 
 def find_runs():
-    return sorted({p.parent for p in RUNS.rglob("windows.parquet")}, key=lambda p: p.stat().st_mtime,
-                  reverse=True)
+    """Runs with output, newest first; subscription runs before --emit-all validation runs."""
+    def emit_all(run):
+        try:
+            return json.loads((run / "metrics.json").read_text())["config"]["emit_all"]
+        except (OSError, KeyError, ValueError):
+            return False
+    runs = {p.parent for p in RUNS.rglob("windows.parquet")}
+    return sorted(runs, key=lambda p: (emit_all(p), -p.stat().st_mtime))
 
 
 @st.cache_data(show_spinner=False)
@@ -86,28 +92,40 @@ with tab_board:
     c3.metric("BUY advisories", int(board["buys"].sum()))
     c4.metric("SELL advisories", int(board["sells"].sum()))
 
-    cols = st.columns(5)
-    for i, r in enumerate(board.iter_rows(named=True)):
+    o1, o2 = st.columns([2, 1])
+    sort_by = o1.radio("Sort tiles by", ["Most recent advisory", "Largest EMA spread", "Most windows"],
+                       horizontal=True)
+    n_tiles = o2.slider("Tiles shown", 10, 200, 40, step=10)
+    key = {"Most recent advisory": (["last_advice_at", "symbol"], [True, False]),
+           "Largest EMA spread": (["abs_spread"], [True]),
+           "Most windows": (["windows"], [True])}[sort_by]
+    shown = (board.with_columns(abs_spread=pl.col("spread_pct").abs())
+             .sort(key[0], descending=key[1], nulls_last=True).head(n_tiles))
+
+    # One HTML grid for all tiles: a single Streamlit element instead of one per symbol
+    # (thousands of elements made the page stall before the other tabs were rendered).
+    tiles = []
+    for r in shown.iter_rows(named=True):
         bull = r["spread_pct"] > 0
-        adv = {1: "▲ BUY", -1: "▼ SELL"}.get(r["last_advice"], "–")
+        adv = {1: "&#9650; BUY", -1: "&#9660; SELL"}.get(r["last_advice"], "&ndash;")
         adv_col = {1: GREEN, -1: RED}.get(r["last_advice"], GREY)
         when = f"{r['last_advice_at']:%a %H:%M}" if r["last_advice_at"] else ""
-        with cols[i % 5]:
-            st.markdown(
-                f"""<div style="border-left:6px solid {GREEN if bull else RED};padding:6px 10px;
-                margin-bottom:10px;border-radius:4px;background:rgba(127,127,127,0.08)">
-                <b>{r['symbol']}</b> <small>{'Index' if r['sectype'] == 'I' else 'Equity'}</small><br>
-                <span style="font-size:1.25em">{r['close']:.4g}</span>
-                <span style="color:{GREEN if bull else RED}">&nbsp;{r['spread_pct']:+.2f}%</span><br>
-                <small style="color:{adv_col}">{adv} {when}</small></div>""",
-                unsafe_allow_html=True)
-    st.caption("Border colour = current regime (green: EMA38 above EMA100). Percentage = EMA spread "
-               "(EMA38 − EMA100)/EMA100. Sorted by most recent advisory.")
+        tiles.append(
+            f'<div style="border-left:6px solid {GREEN if bull else RED};padding:6px 10px;'
+            f'border-radius:4px;background:rgba(127,127,127,0.08)">'
+            f'<b>{r["symbol"]}</b> <small>{"Index" if r["sectype"] == "I" else "Equity"}</small><br>'
+            f'<span style="font-size:1.25em">{r["close"]:.4g}</span>'
+            f'<span style="color:{GREEN if bull else RED}">&nbsp;{r["spread_pct"]:+.2f}%</span><br>'
+            f'<small style="color:{adv_col}">{adv} {when}</small></div>')
+    st.markdown('<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));'
+                'gap:10px">' + "".join(tiles) + "</div>", unsafe_allow_html=True)
+    st.caption(f"Showing {shown.height} of {board.height} symbols. Border colour = current regime "
+               "(green: EMA38 above EMA100). Percentage = EMA spread (EMA38 &minus; EMA100)/EMA100.")
 
 # ------------------------------------------------------------------ symbol detail
 with tab_symbol:
-    syms = board["symbol"].to_list()
-    sym = st.selectbox("Symbol", syms)
+    syms = board.sort("windows", descending=True)["symbol"].to_list()  # most data first
+    sym = st.selectbox("Symbol (sorted by number of windows)", syms)
     d = df.filter(pl.col("symbol") == sym).sort("win")
     x = d["window_start"].to_list()
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.72, 0.28],
