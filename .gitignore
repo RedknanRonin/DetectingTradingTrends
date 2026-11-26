@@ -1,0 +1,20 @@
+Claude.md
+CS_E4780_Course_Project_2026.pdf
+Evaluation_Criteria_26.pdf
+
+# environment
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# data and run outputs (large); summary results are committed explicitly
+data/
+results/runs/
+*.parquet
+
+# scratch outputs from development/smoke tests
+results/profile_partial08/
+results/profile_test/
+results/bench/smoke/
+results/validation/

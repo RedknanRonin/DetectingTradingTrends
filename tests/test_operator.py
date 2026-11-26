@@ -1,0 +1,143 @@
+"""Unit tests for the window/EMA/crossover operator (hand-crafted event sequences)."""
+import numpy as np
+import pytest
+
+from tickstream.config import WINDOW_MS
+from tickstream.operator import ADVICE_BUY, ADVICE_SELL, WindowEmaOperator
+
+A38, A100 = 2 / 39, 2 / 101
+W = WINDOW_MS
+
+
+def ev(*rows):
+    """rows of (sym, t_ms, price) -> arrays"""
+    s, t, p = zip(*rows) if rows else ((), (), ())
+    return np.array(s), np.array(t), np.array(p, dtype=float)
+
+
+def ema_seq(closes, a):
+    e, out = 0.0, []
+    for c in closes:
+        e = c * a + e * (1 - a)
+        out.append(e)
+    return out
+
+
+def test_window_not_evaluated_until_watermark_passes_end():
+    op = WindowEmaOperator(warmup_windows=0)
+    r = op.process(*ev((0, 1000, 10.0), (0, 2000, 11.0)), watermark=W - 1, emit_all=True)
+    assert len(r["sym"]) == 0
+    r = op.process(*ev(), watermark=W, emit_all=True)  # w0 = [0, W) closes at wm = W
+    assert r["sym"].tolist() == [0]
+    assert r["close"][0] == 11.0  # last price in window
+
+
+def test_ema_values_follow_spec_with_ema0_zero():
+    op = WindowEmaOperator(warmup_windows=0)
+    closes = [10.0, 12.0, 11.0, 15.0]
+    rows = [(0, i * W + 10, c) for i, c in enumerate(closes)]
+    r = op.process(*ev(*rows), watermark=np.inf, emit_all=True)
+    np.testing.assert_allclose(r["ema38"], ema_seq(closes, A38))
+    np.testing.assert_allclose(r["ema100"], ema_seq(closes, A100))
+    assert r["win"].tolist() == [0, 1, 2, 3]
+
+
+def test_close_is_latest_event_time_not_arrival_order():
+    op = WindowEmaOperator(warmup_windows=0)
+    # out of order within the window: event at t=5000 arrives after t=6000
+    r = op.process(*ev((0, 6000, 20.0), (0, 5000, 19.0)), watermark=np.inf, emit_all=True)
+    assert r["close"][0] == 20.0
+
+
+def test_close_tie_on_time_takes_last_arrival():
+    op = WindowEmaOperator(warmup_windows=0)
+    r = op.process(*ev((0, 6000, 20.0), (0, 6000, 21.0)), watermark=np.inf, emit_all=True)
+    assert r["close"][0] == 21.0
+
+
+def test_empty_window_is_skipped_and_state_carries_over():
+    op = WindowEmaOperator(warmup_windows=0)
+    # prices in w0 and w3 only
+    r = op.process(*ev((0, 10, 10.0), (0, 3 * W + 10, 20.0)), watermark=np.inf, emit_all=True)
+    assert r["win"].tolist() == [0, 3]
+    np.testing.assert_allclose(r["ema38"], ema_seq([10.0, 20.0], A38))
+
+
+def test_events_split_over_batches_and_pending_state():
+    op = WindowEmaOperator(warmup_windows=0)
+    op.process(*ev((0, 10, 10.0)), watermark=100, emit_all=True)
+    r = op.process(*ev((0, 20, 12.0), (0, W + 5, 13.0)), watermark=W + 5, emit_all=True)
+    assert r["win"].tolist() == [0] and r["close"][0] == 12.0
+    r = op.process(*ev(), watermark=np.inf, emit_all=True)
+    assert r["win"].tolist() == [1] and r["close"][0] == 13.0
+
+
+def test_first_window_buy_with_literal_spec_and_suppressed_with_warmup():
+    lit = WindowEmaOperator(warmup_windows=0)
+    r = lit.process(*ev((0, 10, 100.0)), watermark=np.inf, emit_all=True)
+    assert r["advice"][0] == ADVICE_BUY  # EMA38 > EMA100 > 0 after EMA_0 = 0 (spec artifact)
+    wu = WindowEmaOperator(warmup_windows=1)
+    r = wu.process(*ev((0, 10, 100.0)), watermark=np.inf, emit_all=True)
+    assert r["advice"][0] == 0
+
+
+def _cross_series():
+    # long flat phase (EMAs converge), sharp fall (bearish cross), flat, rise (bullish cross)
+    return ([100.0] * 300 + [100 - 3 * i for i in range(1, 26)] + [25.0] * 60
+            + [25 + 4 * i for i in range(1, 40)])
+
+
+def test_crossovers_match_bruteforce_definition():
+    closes = _cross_series()
+    op = WindowEmaOperator(warmup_windows=1)
+    rows = [(7, i * W + 1, c) for i, c in enumerate(closes)]
+    r = op.process(*ev(*rows), watermark=np.inf, emit_all=True)
+    e38, e100 = ema_seq(closes, A38), ema_seq(closes, A100)
+    expected = []
+    for i in range(1, len(closes)):
+        if e38[i] > e100[i] and e38[i - 1] <= e100[i - 1]:
+            expected.append((i, ADVICE_BUY))
+        elif e38[i] < e100[i] and e38[i - 1] >= e100[i - 1]:
+            expected.append((i, ADVICE_SELL))
+    got = [(int(w), int(a)) for w, a in zip(r["win"], r["advice"]) if a != 0]
+    assert got == expected
+    assert {a for _, a in got} == {ADVICE_BUY, ADVICE_SELL}
+
+
+def test_warmup_counts_previous_windows():
+    closes = _cross_series()
+    rows = [(7, i * W + 1, c) for i, c in enumerate(closes)]
+    full = WindowEmaOperator(warmup_windows=1).process(*ev(*rows), watermark=np.inf, emit_all=True)
+    k = int(full["win"][full["advice"] != 0][0]) + 1  # suppress the first crossover
+    late = WindowEmaOperator(warmup_windows=k).process(*ev(*rows), watermark=np.inf, emit_all=True)
+    assert (late["advice"] != 0).sum() == (full["advice"] != 0).sum() - 1
+
+
+def test_symbols_are_independent_and_subscription_filters_output():
+    op = WindowEmaOperator(warmup_windows=0)
+    op.subscribe([1])
+    r = op.process(*ev((0, 10, 5.0), (1, 20, 7.0), (0, W + 1, 6.0)), watermark=np.inf)
+    assert r["sym"].tolist() == [1]
+    np.testing.assert_allclose(r["ema38"], [7.0 * A38])
+
+
+def test_late_event_for_evaluated_window_is_dropped():
+    op = WindowEmaOperator(warmup_windows=0)
+    op.process(*ev((0, 10, 5.0)), watermark=W, emit_all=True)
+    r = op.process(*ev((0, 20, 99.0)), watermark=W, emit_all=True)
+    assert len(r["sym"]) == 0 and op.late_dropped == 1
+
+
+def test_multiple_windows_closed_at_once_are_evaluated_in_order():
+    op = WindowEmaOperator(warmup_windows=0)
+    rows = [(0, 3 * W + 1, 13.0), (0, 1, 10.0), (0, W + 1, 11.0), (1, 2 * W + 1, 50.0)]
+    r = op.process(*ev(*rows), watermark=np.inf, emit_all=True)
+    sym0 = r["sym"] == 0
+    assert r["win"][sym0].tolist() == [0, 1, 3]
+    np.testing.assert_allclose(r["ema38"][sym0], ema_seq([10.0, 11.0, 13.0], A38))
+
+
+def test_state_grows_for_large_symbol_ids():
+    op = WindowEmaOperator(warmup_windows=0, capacity=4)
+    r = op.process(*ev((10_000, 1, 3.0)), watermark=np.inf, emit_all=True)
+    assert r["sym"].tolist() == [10_000]
