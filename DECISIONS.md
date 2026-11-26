@@ -162,6 +162,14 @@ Numbers from the first ~13M rows of Monday; re-run on the full week for the repo
 - **I11. Dashboard replay.** A time cursor ("now"); every view shows only what was known at
   that time (windows with end <= now, bars with end <= now). Step = 1 minute or 5 minutes.
   Window values are plotted at the window *end* (when they become known), aligned with candles.
+- **I12. Per-symbol activity and tiers.** Workers count price events per symbol (keyed state);
+  the sink writes `symbols.parquet` (symbol, SecType, price events, windows, owning worker) for
+  *all* symbols; the counts reconcile exactly with the source's price-event total. The dashboard
+  groups symbols into rank-based activity tiers over all symbols of the run: very high (top 1%),
+  high (1-10%), medium (10-50%), low (bottom 50% = long tail). Same table gives per-worker load.
+- **I13. EMA visibility in the price-zoomed chart.** Because EMA_0 = 0, EMAs sit far below the
+  price until they converge; the price-zoomed y-axis therefore includes only converged EMA
+  points (within 25% of Close) and states how many windows' EMAs are out of view.
 - **Measured event rates** (partial Monday, 09:00–11:30, all exchanges open): all events
   mean 1,850/s (p99 5,500, max 10,285); price events mean 343/s (p99 2,545, max 3,106);
   price events per (symbol, 5-min window): median 20, p99 300, max 1,610.

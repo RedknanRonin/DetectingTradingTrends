@@ -122,6 +122,8 @@ def worker_main(wid: int, cfg: RunConfig, in_q, results_q):
                 b = bars.process([], [], [], np.inf)
                 if len(b["sym"]):
                     results_q.put(("bars", wid, b))
+            ids = np.flatnonzero(op.events)  # symbols owned by this worker
+            results_q.put(("symstats", wid, ids, op.events[ids], op.nwin[ids]))
             break
         _, seq, t_read, wm, part, subs = msg
         if subs:
@@ -210,6 +212,7 @@ def run(cfg: RunConfig) -> dict:
     names, sectypes = {}, {}
     chunks = []
     bar_chunks = []
+    sym_stats = []
     result_latency = []
     worker_stats, source_stats, of_sym = {}, None, None
     live = open(out / "advisories_live.jsonl", "w") if cfg.live_advisories else None
@@ -246,6 +249,8 @@ def run(cfg: RunConfig) -> dict:
                         latency_ms=round((now - t_read) * 1000, 2))) + "\n")
                 if len(adv):
                     live.flush()
+        elif kind == "symstats":
+            sym_stats.append(msg[1:])
         elif kind == "bars":
             bar_chunks.append(msg[2])
         elif kind == "stream_start":
@@ -266,6 +271,7 @@ def run(cfg: RunConfig) -> dict:
     wall = t_end - t_stream_start
     _write_results(out, chunks, names, sectypes)
     _write_bars(out, bar_chunks, names)
+    _write_symbols(out, sym_stats, names, sectypes)
     cpu = np.array([(s[1], s[2]) for s in sampler.samples]) if sampler.samples else np.zeros((0, 2))
     ev = [worker_stats[w]["events"] for w in range(cfg.workers)]
     close_lat = np.concatenate([np.asarray(worker_stats[w].pop("close_latency_raw"), dtype=float)
@@ -298,6 +304,22 @@ def run(cfg: RunConfig) -> dict:
 
 def _fmt_ts(ms: int) -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(ms / 1000))
+
+
+def _write_symbols(out: Path, stats, names, sectypes):
+    """Per-symbol activity (price events, windows) and owning worker - all symbols."""
+    import polars as pl
+    if not stats:
+        return
+    wid = np.concatenate([np.full(len(ids), w) for w, ids, _, _ in stats])
+    ids = np.concatenate([s[1] for s in stats])
+    pl.DataFrame(dict(
+        symbol=[names.get(int(s), str(s)) for s in ids],
+        sectype=[sectypes.get(int(s)) for s in ids],
+        price_events=np.concatenate([s[2] for s in stats]),
+        windows=np.concatenate([s[3] for s in stats]),
+        worker=wid,
+    )).sort("price_events", descending=True).write_parquet(out / "symbols.parquet")
 
 
 def _write_bars(out: Path, chunks, names):

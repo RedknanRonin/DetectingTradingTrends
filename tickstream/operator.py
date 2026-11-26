@@ -28,6 +28,7 @@ class WindowEmaOperator:
         self.ema2 = np.zeros(capacity)
         self.nwin = np.zeros(capacity, dtype=np.int64)  # windows evaluated so far per symbol
         self.subscribed = np.zeros(capacity, dtype=bool)
+        self.events = np.zeros(capacity, dtype=np.int64)  # price events seen per symbol
         # pending (not yet evaluated) closes: one row per (symbol, window)
         self.p_sym = np.empty(0, np.int64)
         self.p_win = np.empty(0, np.int64)
@@ -42,7 +43,7 @@ class WindowEmaOperator:
         if max_sym < len(self.ema1):
             return
         n = max(max_sym + 1, 2 * len(self.ema1))
-        for name in ("ema1", "ema2", "nwin", "subscribed"):
+        for name in ("ema1", "ema2", "nwin", "subscribed", "events"):
             old = getattr(self, name)
             new = np.zeros(n, dtype=old.dtype)
             new[: len(old)] = old
@@ -67,6 +68,8 @@ class WindowEmaOperator:
             self._ensure(int(sym.max()))
         t = np.asarray(t, dtype=np.int64)
         price = np.asarray(price, dtype=np.float64)
+        if len(sym):
+            self.events += np.bincount(sym, minlength=len(self.events))
         win = t // self.window_ms
         if self.closed_upto is not None:  # defensive: never re-open an evaluated window
             ok = win >= self.closed_upto

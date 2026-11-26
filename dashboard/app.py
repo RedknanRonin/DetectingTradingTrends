@@ -59,6 +59,31 @@ def load_bars(run: Path):
     return _read_bars(str(p), p.stat().st_mtime) if p.exists() else None
 
 
+TIERS = ["Very high (top 1%)", "High (top 1-10%)", "Medium (10-50%)", "Low (bottom 50%)"]
+TIER_BOUNDS = [0.01, 0.10, 0.50]  # cumulative rank fractions
+
+
+def activity_tiers(run: Path, df: pl.DataFrame) -> tuple[pl.DataFrame, str]:
+    """Activity tier per symbol from its rank by number of price events among ALL symbols of
+    the run (symbols.parquet). Older runs without it fall back to the window count."""
+    p = run / "symbols.parquet"
+    if p.exists():
+        s = pl.read_parquet(p).select(["symbol", "price_events"])
+        basis = "price events per symbol, ranked over all symbols processed in the run"
+    else:
+        s = df.group_by("symbol").agg(price_events=pl.len())
+        basis = "number of windows (older run without symbols.parquet)"
+    s = s.sort(["price_events", "symbol"], descending=[True, False]).with_columns(
+        rank_frac=(pl.int_range(pl.len()) + 1) / pl.len())
+    tier_idx = (pl.when(pl.col("rank_frac") <= TIER_BOUNDS[0]).then(0)
+                .when(pl.col("rank_frac") <= TIER_BOUNDS[1]).then(1)
+                .when(pl.col("rank_frac") <= TIER_BOUNDS[2]).then(2).otherwise(3))
+    s = s.with_columns(tier_idx=tier_idx).with_columns(
+        tier=pl.col("tier_idx").replace_strict(dict(enumerate(TIERS)), return_dtype=pl.Utf8),
+        event_share=pl.col("price_events") / pl.col("price_events").sum())
+    return s, basis
+
+
 def load_live(run: Path) -> pl.DataFrame:
     p = run / "advisories_live.jsonl"
     if not p.exists() or p.stat().st_size == 0:
@@ -83,6 +108,14 @@ with st.sidebar:
     sectypes = st.multiselect("Security type", ["E", "I"], default=["E", "I"],
                               format_func=lambda s: {"E": "Equity", "I": "Index"}[s])
     df = df.filter(pl.col("sectype").is_in(sectypes))
+    tiers, tier_basis = activity_tiers(run, df)
+    df = df.join(tiers.select(["symbol", "tier", "tier_idx", "price_events"]), on="symbol", how="left")
+    present = [t for t in TIERS if t in set(df["tier"].drop_nulls().to_list())]
+    sel_tiers = st.multiselect("Activity tier", present, default=present, help=f"Tiers by {tier_basis}.")
+    df = df.filter(pl.col("tier").is_in(sel_tiers))
+    if df.is_empty():
+        st.info("No symbols match the filters.")
+        st.stop()
     t_min, t_max = df["window_start"].min(), df["window_start"].max()
     st.caption(f"{df['symbol'].n_unique()} symbols · windows {t_min:%a %d.%m %H:%M} – {t_max:%a %d.%m %H:%M}")
 
@@ -167,6 +200,33 @@ df = df.filter(pl.col("window_start") + FIVE_MIN <= now)  # windows evaluated by
 bars = (bars_all.filter(pl.col("minute_start") + ONE_MIN <= now) if bars_all is not None else None)
 fresh_after = now - FIVE_MIN  # advisories from windows that ended in the last 5 minutes are "new"
 
+def _render_tiles(rows: pl.DataFrame) -> None:
+    """All tiles as ONE HTML grid (a single Streamlit element instead of one per symbol;
+    thousands of elements made the page stall before the other tabs were rendered)."""
+    tiles = []
+    for r in rows.iter_rows(named=True):
+        bull = r["spread_pct"] > 0
+        adv = {1: "&#9650; BUY", -1: "&#9660; SELL"}.get(r["last_advice"], "&ndash;")
+        adv_col = {1: GREEN, -1: RED}.get(r["last_advice"], GREY)
+        when = f"{r['last_advice_at']:%a %H:%M}" if r["last_advice_at"] else ""
+        new = (r["last_advice_at"] is not None
+               and r["last_advice_at"] + FIVE_MIN > fresh_after)  # raised in the last 5 min
+        ring = f"box-shadow:0 0 0 2px {adv_col};" if new else ""
+        badge = (f' <small style="background:{adv_col};color:white;padding:0 4px;border-radius:3px">'
+                 f'NEW</small>') if new else ""
+        events = f"{r['price_events']:,} ev" if r.get("price_events") is not None else ""
+        tiles.append(
+            f'<div style="border-left:6px solid {GREEN if bull else RED};padding:6px 10px;{ring}'
+            f'border-radius:4px;background:rgba(127,127,127,0.08)">'
+            f'<b>{r["symbol"]}</b> <small>{"Index" if r["sectype"] == "I" else "Equity"}</small>{badge}<br>'
+            f'<span style="font-size:1.25em">{r["close"]:.4g}</span>'
+            f'<span style="color:{GREEN if bull else RED}">&nbsp;{r["spread_pct"]:+.2f}%</span><br>'
+            f'<small style="color:{adv_col}">{adv} {when}</small>'
+            f'<small style="float:right;color:{GREY}">{events}</small></div>')
+    st.markdown('<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));'
+                'gap:10px;margin-bottom:12px">' + "".join(tiles) + "</div>", unsafe_allow_html=True)
+
+
 tab_board, tab_symbol, tab_feed, tab_metrics = st.tabs(
     ["Signal board", "Symbol detail", "Advisory feed", "Run metrics"])
 
@@ -176,6 +236,7 @@ with tab_board:
         pl.col("sectype").last(), pl.col("window_start").last().alias("last_window"),
         pl.col("close").last(), pl.col("ema38").last(), pl.col("ema100").last(),
         pl.col("spread_pct").last(), pl.len().alias("windows"),
+        pl.col("tier").first(), pl.col("tier_idx").first(), pl.col("price_events").first(),
         (pl.col("advice") == 1).sum().alias("buys"), (pl.col("advice") == -1).sum().alias("sells"),
     )
     last_adv = (df.filter(pl.col("advice") != 0).sort("win").group_by("symbol")
@@ -193,52 +254,55 @@ with tab_board:
     c3.metric("BUY advisories", int(board["buys"].sum()))
     c4.metric("SELL advisories", int(board["sells"].sum()))
 
-    o1, o2 = st.columns([2, 1])
-    sort_by = o1.radio("Sort tiles by", ["Most recent advisory", "Largest EMA spread", "Most windows"],
+    o1, o2, o3 = st.columns([2, 1, 1])
+    sort_by = o1.radio("Sort tiles by", ["Most recent advisory", "Largest EMA spread", "Most active"],
                        horizontal=True)
-    n_tiles = o2.slider("Tiles shown", 10, 200, 40, step=10)
+    group = o2.toggle("Group by activity tier", value=True)
+    n_tiles = o3.slider("Tiles per group" if group else "Tiles shown", 5, 200, 20 if group else 40, step=5)
     key = {"Most recent advisory": (["last_advice_at", "symbol"], [True, False]),
-           "Largest EMA spread": (["abs_spread"], [True]),
-           "Most windows": (["windows"], [True])}[sort_by]
-    shown = (board.with_columns(abs_spread=pl.col("spread_pct").abs())
-             .sort(key[0], descending=key[1], nulls_last=True).head(n_tiles))
+           "Largest EMA spread": (["abs_spread", "symbol"], [True, False]),
+           "Most active": (["price_events", "symbol"], [True, False])}[sort_by]
+    ordered = board.with_columns(abs_spread=pl.col("spread_pct").abs()).sort(
+        key[0], descending=key[1], nulls_last=True)
+    if group:
+        groups = [(t, ordered.filter(pl.col("tier") == t)) for t in TIERS]
+        groups = [(t, g) for t, g in groups if not g.is_empty()]
+    else:
+        groups = [(None, ordered)]
+    tier_share = dict(tiers.group_by("tier").agg(pl.col("event_share").sum()).iter_rows())
+    tier_size = dict(tiers.group_by("tier").len().iter_rows())
+    n_shown = 0
+    for tier_name, g in groups:
+        shown = g.head(n_tiles)
+        n_shown += shown.height
+        if tier_name is not None:
+            st.markdown(f"##### {tier_name}\n"
+                        f"<small>{g.height} symbol(s) here · tier = {tier_size.get(tier_name, 0)} symbols "
+                        f"producing {tier_share.get(tier_name, 0):.0%} of all price events</small>",
+                        unsafe_allow_html=True)
+        _render_tiles(shown)
+    st.caption(f"Showing {n_shown} of {board.height} symbols. Tiers by {tier_basis}. Border colour = "
+               "current regime (green: EMA38 above EMA100). Percentage = EMA spread "
+               "(EMA38 &minus; EMA100)/EMA100.")
 
-    # One HTML grid for all tiles: a single Streamlit element instead of one per symbol
-    # (thousands of elements made the page stall before the other tabs were rendered).
-    tiles = []
-    for r in shown.iter_rows(named=True):
-        bull = r["spread_pct"] > 0
-        adv = {1: "&#9650; BUY", -1: "&#9660; SELL"}.get(r["last_advice"], "&ndash;")
-        adv_col = {1: GREEN, -1: RED}.get(r["last_advice"], GREY)
-        when = f"{r['last_advice_at']:%a %H:%M}" if r["last_advice_at"] else ""
-        new = (r["last_advice_at"] is not None
-               and r["last_advice_at"] + FIVE_MIN > fresh_after)  # raised in the last 5 min
-        ring = f"box-shadow:0 0 0 2px {adv_col};" if new else ""
-        badge = (f' <small style="background:{adv_col};color:white;padding:0 4px;border-radius:3px">'
-                 f'NEW</small>') if new else ""
-        tiles.append(
-            f'<div style="border-left:6px solid {GREEN if bull else RED};padding:6px 10px;{ring}'
-            f'border-radius:4px;background:rgba(127,127,127,0.08)">'
-            f'<b>{r["symbol"]}</b> <small>{"Index" if r["sectype"] == "I" else "Equity"}</small>{badge}<br>'
-            f'<span style="font-size:1.25em">{r["close"]:.4g}</span>'
-            f'<span style="color:{GREEN if bull else RED}">&nbsp;{r["spread_pct"]:+.2f}%</span><br>'
-            f'<small style="color:{adv_col}">{adv} {when}</small></div>')
-    st.markdown('<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));'
-                'gap:10px">' + "".join(tiles) + "</div>", unsafe_allow_html=True)
-    st.caption(f"Showing {shown.height} of {board.height} symbols. Border colour = current regime "
-               "(green: EMA38 above EMA100). Percentage = EMA spread (EMA38 &minus; EMA100)/EMA100.")
 
 # ------------------------------------------------------------------ symbol detail
 with tab_symbol:
     # options from the whole run, so the selection stays stable while the replay advances
     # deterministic order (ties broken by name): if the option list changed between reruns,
     # Streamlit would treat it as a new widget and reset the selection
-    syms = (df_all.group_by("symbol").len()
-            .sort(["len", "symbol"], descending=[True, False])["symbol"].to_list())
+    info = (df_all.group_by("symbol").agg(pl.col("price_events").first(), pl.col("tier").first())
+            .sort(["price_events", "symbol"], descending=[True, False], nulls_last=True))
+    syms = info["symbol"].to_list()
+    label = {r["symbol"]: f"{r['symbol']}  ·  {r['tier']}  ·  {r['price_events'] or 0:,} price events"
+             for r in info.iter_rows(named=True)}
     c_sym, c_fit = st.columns([3, 1])
-    sym = c_sym.selectbox("Symbol (sorted by number of windows)", syms, key="symbol_select")
-    fit_price = c_fit.toggle("Fit y-axis to price", value=True,
-                             help="Off: show the full EMA range, including the start-up from EMA_0 = 0")
+    sym = c_sym.selectbox("Symbol (most active first)", syms, key="symbol_select",
+                          format_func=lambda x: label.get(x, x))
+    fit_price = c_fit.toggle(
+        "Zoom to price", value=True,
+        help="On: y-axis fitted to the candles and to EMA values that have converged to the price. "
+             "Off: full range, including the EMA start-up from EMA_0 = 0.")
     d_all = df_all.filter(pl.col("symbol") == sym)
     d = df.filter(pl.col("symbol") == sym).sort("win")
     sb = (bars.filter(pl.col("symbol") == sym).sort("minute") if bars is not None else None)
@@ -290,14 +354,30 @@ with tab_symbol:
         fig.add_vline(x=now, line_width=1, line_dash="dot", line_color=GREY)
     fig.update_yaxes(title_text="price", row=1, col=1)
     fig.update_yaxes(title_text="spread %", row=2, col=1)
-    if fit_price:
-        # Price-focused y-axis: EMAs start at 0 (EMA_0 = 0) and would otherwise squash the
-        # candles into a flat line until they converge; they enter the view once they do.
+    if fit_price and show_chart:
+        # Price-focused y-axis: EMAs start at 0 (EMA_0 = 0) and would squash the candles into
+        # a flat line while they converge. The range covers the candles plus every EMA point
+        # within 25% of the Close (i.e. converged); EMA points still far below the price are
+        # out of view, and the chart says so instead of silently hiding them.
         lo = sb["low"].min() if has_candles else d["close"].min()
         hi = sb["high"].max() if has_candles else d["close"].max()
+        hidden = 0
+        if not d.is_empty():
+            near = d.filter(((pl.col("ema100") - pl.col("close")).abs() <= 0.25 * pl.col("close").abs())
+                            & ((pl.col("ema38") - pl.col("close")).abs() <= 0.25 * pl.col("close").abs()))
+            hidden = d.height - near.height
+            if not near.is_empty():
+                lo = min(lo, near["ema38"].min(), near["ema100"].min())
+                hi = max(hi, near["ema38"].max(), near["ema100"].max())
         if lo is not None and hi is not None:
             pad = max((hi - lo) * 0.08, abs(hi) * 0.002)
             fig.update_yaxes(range=[lo - pad, hi + pad], row=1, col=1)
+        if hidden:
+            fig.add_annotation(
+                text=(f"EMA38/EMA100 below the visible range in {hidden} of {d.height} windows "
+                      f"(still converging from EMA<sub>0</sub> = 0) — switch off 'Zoom to price' to see them"),
+                xref="paper", yref="paper", x=0.01, y=0.99, xanchor="left", yanchor="top",
+                showarrow=False, font=dict(size=11, color=BLUE), bgcolor="rgba(255,255,255,0.8)")
     if show_chart:
         st.plotly_chart(fig, width="stretch")
     st.dataframe(d.filter(pl.col("advice") != 0).select(

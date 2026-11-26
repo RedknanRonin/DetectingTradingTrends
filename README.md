@@ -86,6 +86,7 @@ Outputs in `--out`:
 | `windows.parquet` | Per (symbol, window): Close, EMA38, EMA100, previous EMAs, advice |
 | `advisories.parquet` | Advisories only |
 | `bars.parquet` | 1-minute OHLC bars of subscribed symbols (for the dashboard) |
+| `symbols.parquet` | Per symbol (all): SecType, price events, windows, owning worker |
 | `advisories_live.jsonl` | Advisories written while the run is in progress |
 | `metrics.json` | Run metrics |
 | `cpu_timeline.csv` | CPU utilisation over time |
