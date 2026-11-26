@@ -203,8 +203,11 @@ with tab_board:
 # ------------------------------------------------------------------ symbol detail
 with tab_symbol:
     # options from the whole run, so the selection stays stable while the replay advances
-    syms = df_all.group_by("symbol").len().sort("len", descending=True)["symbol"].to_list()
-    sym = st.selectbox("Symbol (sorted by number of windows)", syms)
+    # deterministic order (ties broken by name): if the option list changed between reruns,
+    # Streamlit would treat it as a new widget and reset the selection
+    syms = (df_all.group_by("symbol").len()
+            .sort(["len", "symbol"], descending=[True, False])["symbol"].to_list())
+    sym = st.selectbox("Symbol (sorted by number of windows)", syms, key="symbol_select")
     d_all = df_all.filter(pl.col("symbol") == sym)
     d = df.filter(pl.col("symbol") == sym).sort("win")
     if d.is_empty():
