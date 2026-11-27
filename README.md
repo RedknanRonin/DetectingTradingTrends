@@ -30,6 +30,33 @@ CSV day files ──► Source (1 process) ──bounded queues──► Worker 
 | `scripts/bench.py` | Experiment matrix (cores, preload, partitioning, lateness, block size) |
 | `dashboard/app.py` | Streamlit dashboard |
 
+## Dashboard
+
+`streamlit run dashboard/app.py`. Screenshots from the full-week run (`--cores 8`, the
+default 50 subscribed symbols), with the replay cursor at the end of the week (Fri 22:30).
+
+**Signal board:** one tile per subscribed symbol, grouped by activity tier. Each tile shows
+the last Close, the EMA38-vs-EMA100 spread (green = bullish, red = bearish) and the latest
+advisory.
+
+![Signal board](docs/screenshots/signal_board.png)
+
+**Symbol detail:** 1-minute candles with EMA38/EMA100 at each window end, BUY/SELL markers,
+bullish/bearish shading and the EMA spread panel. On Monday the EMAs climb from EMA<sub>0</sub> = 0.
+
+![Symbol detail](docs/screenshots/symbol_detail.png)
+
+**Advisory feed:** advisories as they were written during the run (with latency) and per hour.
+
+![Advisory feed](docs/screenshots/advisory_feed.png)
+
+**Run metrics:** throughput, window latency, load per worker and CPU utilisation.
+
+![Run metrics](docs/screenshots/run_metrics.png)
+
+The sidebar's replay controls (step 1 or 5 minutes, play/pause, time slider, speed) move a
+time cursor; every view shows only what was known at that time.
+
 ## Setup
 
 ```bash
