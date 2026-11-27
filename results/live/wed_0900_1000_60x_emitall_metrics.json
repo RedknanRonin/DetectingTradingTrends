@@ -1,0 +1,155 @@
+{
+  "config": {
+    "files": [],
+    "out_dir": "results/runs/live_val",
+    "workers": 4,
+    "cores": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "partitioning": "hash",
+    "weights_file": "results/profile/price_events_per_symbol.csv",
+    "lateness_ms": 1000,
+    "stale_ms": 300000,
+    "warmup_windows": 0,
+    "subscriptions_file": "config/subscriptions.txt",
+    "emit_all": true,
+    "block_size": 16777216,
+    "queue_size": 8,
+    "max_rows": null,
+    "source_threads": null,
+    "live_advisories": true,
+    "minute_bars": true,
+    "preload": false,
+    "socket": "127.0.0.1:9000",
+    "flush_ms": 100,
+    "idle_ms": 2000,
+    "clock_rate": 60.0,
+    "extra": {}
+  },
+  "wall_s": 61.80420708656311,
+  "total_wall_s": 62.544283866882324,
+  "rows": 8454664,
+  "price_events": 1839143,
+  "throughput_rows_per_s": 136797.54823419024,
+  "throughput_price_events_per_s": 29757.569697870116,
+  "source": {
+    "rows": 8454664,
+    "price_events": 1839143,
+    "non_price_events": 6615521,
+    "late_dropped": 0,
+    "stale_timestamp_dropped": 0,
+    "invalid_rows_skipped": 0,
+    "batches": 600,
+    "read_s": 13.222832441329956,
+    "transform_s": 6.379431962966919,
+    "idle_advances": 0,
+    "bytes": 722255533,
+    "wall_s": 61.733718156814575,
+    "symbols": 3860
+  },
+  "workers": {
+    "2": {
+      "events": 504624,
+      "busy_s": 0.5610506534576416,
+      "wait_s": 61.56203556060791,
+      "late_dropped_in_operator": 0,
+      "windows_evaluated": 15292,
+      "batch_latency_s": {
+        "p50": 0.10371053218841553,
+        "p90": 0.12114176750183106,
+        "p99": 0.1361119222640991,
+        "p99.9": 0.37758698344233144,
+        "max": 0.5990316867828369,
+        "mean": 0.1039396321773529
+      }
+    },
+    "0": {
+      "events": 403122,
+      "busy_s": 0.5191731452941895,
+      "wait_s": 61.60521721839905,
+      "late_dropped_in_operator": 0,
+      "windows_evaluated": 15138,
+      "batch_latency_s": {
+        "p50": 0.10382437705993652,
+        "p90": 0.12063009738922119,
+        "p99": 0.13775288581848144,
+        "p99.9": 0.37781207251551246,
+        "max": 0.5984416007995605,
+        "mean": 0.10375147024790446
+      }
+    },
+    "3": {
+      "events": 508783,
+      "busy_s": 0.5520954132080078,
+      "wait_s": 61.55670189857483,
+      "late_dropped_in_operator": 0,
+      "windows_evaluated": 14832,
+      "batch_latency_s": {
+        "p50": 0.10378885269165039,
+        "p90": 0.12088708877563477,
+        "p99": 0.13581540822982785,
+        "p99.9": 0.3790016834736122,
+        "max": 0.6025717258453369,
+        "mean": 0.10410674770673116
+      }
+    },
+    "1": {
+      "events": 422614,
+      "busy_s": 0.5226519107818604,
+      "wait_s": 61.60276937484741,
+      "late_dropped_in_operator": 0,
+      "windows_evaluated": 15441,
+      "batch_latency_s": {
+        "p50": 0.10379290580749512,
+        "p90": 0.12057316303253174,
+        "p99": 0.13698272943496703,
+        "p99.9": 0.37812387180330853,
+        "max": 0.5989506244659424,
+        "mean": 0.10368573784828186
+      }
+    }
+  },
+  "worker_event_share": [
+    0.21919013366551704,
+    0.22978854825318096,
+    0.27437996936616676,
+    0.27664134871513524
+  ],
+  "load_imbalance": 1.106565394860541,
+  "window_close_latency_s": {
+    "p50": 0.12057149410247803,
+    "p90": 0.22490191459655767,
+    "p99": 0.5997750949859619,
+    "p99.9": 0.6022920627593994,
+    "max": 0.6025717258453369,
+    "mean": 0.14588663280010222
+  },
+  "result_latency_s": {
+    "p50": 0.12296342849731445,
+    "p90": 0.22512736320495605,
+    "p99": 0.6011169791221619,
+    "p99.9": 0.6034420573711395,
+    "max": 0.6037003993988037,
+    "mean": 0.14324199585687547
+  },
+  "cpu_process_tree_pct": {
+    "p50": 49.45,
+    "p90": 62.64999999999999,
+    "p99": 81.194,
+    "p99.9": 90.15340000000009,
+    "max": 91.3,
+    "mean": 49.551694915254224
+  },
+  "cpu_system_pct": {
+    "p50": 20.1,
+    "p90": 27.88,
+    "p99": 37.208999999999996,
+    "p99.9": 44.48740000000007,
+    "max": 45.4,
+    "mean": 21.066949152542374
+  },
+  "n_cores": 4
+}

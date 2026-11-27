@@ -1,0 +1,253 @@
+[source] connected to 127.0.0.1:9001
+[source] rows=496,477 (98,302/s)  price=371,556  watermark=2021-11-10 08:29:59  late=0  idle_adv=0
+[source] rows=1,336,329 (167,931/s)  price=600,011  watermark=2021-11-10 09:03:29  late=0  idle_adv=0
+[source] rows=2,295,952 (191,810/s)  price=776,218  watermark=2021-11-10 09:11:24  late=0  idle_adv=0
+[source] rows=3,054,782 (149,324/s)  price=929,064  watermark=2021-11-10 09:18:18  late=0  idle_adv=0
+[source] rows=3,962,548 (181,505/s)  price=1,094,046  watermark=2021-11-10 09:25:45  late=0  idle_adv=0
+[source] rows=5,009,427 (209,231/s)  price=1,269,703  watermark=2021-11-10 09:33:52  late=0  idle_adv=0
+[source] rows=5,866,821 (171,433/s)  price=1,408,986  watermark=2021-11-10 09:40:04  late=0  idle_adv=0
+[source] rows=6,766,417 (179,884/s)  price=1,554,366  watermark=2021-11-10 09:46:37  late=0  idle_adv=0
+[source] rows=7,675,884 (181,865/s)  price=1,705,554  watermark=2021-11-10 09:53:42  late=0  idle_adv=0
+[source] rows=8,457,214 (155,056/s)  price=1,840,681  watermark=2021-11-10 09:59:59  late=0  idle_adv=0
+[source] rows=9,523,279 (211,770/s)  price=2,010,135  watermark=2021-11-10 10:07:45  late=0  idle_adv=0
+[source] rows=10,400,221 (173,033/s)  price=2,140,558  watermark=2021-11-10 10:13:49  late=0  idle_adv=0
+[source] rows=11,308,179 (179,823/s)  price=2,283,993  watermark=2021-11-10 10:20:35  late=0  idle_adv=0
+[source] rows=12,471,500 (230,890/s)  price=2,467,103  watermark=2021-11-10 10:29:05  late=0  idle_adv=0
+[source] rows=13,636,973 (230,804/s)  price=2,641,165  watermark=2021-11-10 10:37:08  late=0  idle_adv=0
+[source] rows=14,800,314 (231,078/s)  price=2,825,928  watermark=2021-11-10 10:45:40  late=0  idle_adv=0
+[source] rows=15,942,947 (228,422/s)  price=3,004,704  watermark=2021-11-10 10:54:04  late=0  idle_adv=0
+[source] rows=17,053,833 (222,073/s)  price=3,196,606  watermark=2021-11-10 11:03:14  late=0  idle_adv=0
+[source] rows=18,166,203 (221,153/s)  price=3,397,943  watermark=2021-11-10 11:12:55  late=0  idle_adv=0
+[source] rows=19,284,400 (221,008/s)  price=3,594,108  watermark=2021-11-10 11:22:02  late=0  idle_adv=0
+[source] rows=20,424,199 (226,802/s)  price=3,806,144  watermark=2021-11-10 11:32:02  late=0  idle_adv=0
+[source] rows=21,573,000 (227,445/s)  price=4,004,093  watermark=2021-11-10 11:41:24  late=0  idle_adv=0
+[source] rows=22,730,539 (229,367/s)  price=4,204,257  watermark=2021-11-10 11:50:45  late=0  idle_adv=0
+[source] rows=23,836,084 (218,902/s)  price=4,415,617  watermark=2021-11-10 12:00:50  late=0  idle_adv=0
+[source] rows=24,965,000 (224,176/s)  price=4,629,780  watermark=2021-11-10 12:11:04  late=0  idle_adv=0
+[source] rows=26,087,581 (222,975/s)  price=4,839,453  watermark=2021-11-10 12:21:08  late=0  idle_adv=0
+[source] rows=27,246,543 (229,497/s)  price=5,067,937  watermark=2021-11-10 12:32:01  late=0  idle_adv=0
+[source] rows=28,405,715 (229,858/s)  price=5,285,214  watermark=2021-11-10 12:42:23  late=0  idle_adv=0
+[source] rows=29,596,398 (235,228/s)  price=5,502,724  watermark=2021-11-10 12:52:51  late=0  idle_adv=0
+[source] rows=30,667,632 (213,086/s)  price=5,702,664  watermark=2021-11-10 13:02:29  late=0  idle_adv=0
+[source] rows=31,783,246 (221,471/s)  price=5,915,388  watermark=2021-11-10 13:12:52  late=0  idle_adv=0
+[source] rows=32,908,641 (223,254/s)  price=6,149,255  watermark=2021-11-10 13:24:21  late=0  idle_adv=0
+[source] rows=34,044,951 (225,986/s)  price=6,396,131  watermark=2021-11-10 13:36:33  late=0  idle_adv=0
+[source] rows=35,138,322 (218,654/s)  price=6,621,355  watermark=2021-11-10 13:47:39  late=0  idle_adv=0
+[source] rows=35,956,742 (162,118/s)  price=6,807,482  watermark=2021-11-10 13:56:49  late=0  idle_adv=0
+[source] rows=36,784,311 (165,507/s)  price=6,976,757  watermark=2021-11-10 14:05:05  late=0  idle_adv=0
+[source] rows=37,608,715 (164,136/s)  price=7,151,891  watermark=2021-11-10 14:13:43  late=0  idle_adv=0
+[source] rows=38,409,565 (158,770/s)  price=7,331,161  watermark=2021-11-10 14:22:28  late=0  idle_adv=0
+[source] rows=39,478,679 (212,594/s)  price=7,541,805  watermark=2021-11-10 14:32:18  late=0  idle_adv=0
+[source] rows=40,637,189 (230,515/s)  price=7,702,095  watermark=2021-11-10 14:39:57  late=0  idle_adv=0
+[source] rows=41,730,899 (218,649/s)  price=7,882,884  watermark=2021-11-10 14:48:42  late=0  idle_adv=0
+[source] rows=42,871,242 (227,495/s)  price=8,075,729  watermark=2021-11-10 14:57:51  late=0  idle_adv=0
+[source] rows=43,987,225 (221,832/s)  price=8,279,365  watermark=2021-11-10 15:07:40  late=0  idle_adv=0
+[source] rows=45,113,503 (225,209/s)  price=8,495,301  watermark=2021-11-10 15:18:11  late=0  idle_adv=0
+[source] rows=46,157,474 (208,338/s)  price=8,705,058  watermark=2021-11-10 15:28:24  late=0  idle_adv=0
+[source] rows=47,301,562 (228,277/s)  price=8,840,481  watermark=2021-11-10 15:34:20  late=0  idle_adv=0
+[source] rows=48,428,271 (225,342/s)  price=8,971,810  watermark=2021-11-10 15:40:07  late=0  idle_adv=0
+[source] rows=49,583,954 (229,858/s)  price=9,122,245  watermark=2021-11-10 15:47:03  late=0  idle_adv=0
+[source] rows=50,742,287 (230,368/s)  price=9,276,171  watermark=2021-11-10 15:54:13  late=0  idle_adv=0
+[source] rows=51,925,425 (234,226/s)  price=9,449,313  watermark=2021-11-10 16:02:12  late=0  idle_adv=0
+[source] rows=53,099,627 (232,691/s)  price=9,625,814  watermark=2021-11-10 16:10:27  late=0  idle_adv=0
+[source] rows=54,287,813 (235,505/s)  price=9,811,051  watermark=2021-11-10 16:18:59  late=0  idle_adv=0
+[source] rows=55,419,253 (223,754/s)  price=9,968,196  watermark=2021-11-10 16:26:05  late=0  idle_adv=0
+[source] rows=56,559,396 (226,161/s)  price=10,146,194  watermark=2021-11-10 16:34:20  late=0  idle_adv=0
+[source] rows=57,711,620 (228,607/s)  price=10,325,241  watermark=2021-11-10 16:42:37  late=0  idle_adv=0
+[source] rows=58,805,974 (217,148/s)  price=10,519,626  watermark=2021-11-10 16:51:44  late=0  idle_adv=0
+[source] rows=59,894,464 (215,965/s)  price=10,717,200  watermark=2021-11-10 17:01:06  late=0  idle_adv=0
+[source] rows=61,009,330 (220,678/s)  price=10,901,317  watermark=2021-11-10 17:09:37  late=0  idle_adv=0
+[source] rows=62,099,554 (216,683/s)  price=11,098,120  watermark=2021-11-10 17:18:43  late=0  idle_adv=0
+[source] rows=63,172,109 (211,862/s)  price=11,300,238  watermark=2021-11-10 17:27:34  late=0  idle_adv=0
+[source] rows=63,235,064 (12,458/s)  price=11,312,002  watermark=2021-11-10 17:28:04  late=0  idle_adv=0
+[source] rows=63,244,912 (1,951/s)  price=11,313,087  watermark=2021-11-10 17:28:09  late=0  idle_adv=0
+[source] rows=63,254,984 (1,997/s)  price=11,315,519  watermark=2021-11-10 17:28:14  late=0  idle_adv=0
+[source] rows=63,265,952 (2,194/s)  price=11,317,813  watermark=2021-11-10 17:28:20  late=0  idle_adv=0
+[source] rows=63,274,456 (1,700/s)  price=11,318,976  watermark=2021-11-10 17:28:25  late=0  idle_adv=0
+[source] rows=63,282,896 (1,688/s)  price=11,321,031  watermark=2021-11-10 17:28:29  late=0  idle_adv=0
+[source] rows=63,298,392 (3,047/s)  price=11,323,955  watermark=2021-11-10 17:28:36  late=0  idle_adv=0
+[source] rows=63,307,160 (1,725/s)  price=11,325,153  watermark=2021-11-10 17:28:41  late=0  idle_adv=0
+[source] rows=63,317,104 (1,957/s)  price=11,328,525  watermark=2021-11-10 17:28:46  late=0  idle_adv=0
+[source] rows=63,325,904 (1,752/s)  price=11,329,681  watermark=2021-11-10 17:28:50  late=0  idle_adv=0
+[source] rows=63,337,424 (2,262/s)  price=11,331,005  watermark=2021-11-10 17:28:56  late=0  idle_adv=0
+[source] rows=63,350,224 (2,551/s)  price=11,334,654  watermark=2021-11-10 17:29:01  late=0  idle_adv=0
+[source] rows=63,359,384 (1,798/s)  price=11,335,878  watermark=2021-11-10 17:29:06  late=0  idle_adv=0
+[source] rows=63,371,936 (2,459/s)  price=11,337,279  watermark=2021-11-10 17:29:11  late=0  idle_adv=0
+[source] rows=63,387,184 (3,049/s)  price=11,340,787  watermark=2021-11-10 17:29:15  late=0  idle_adv=0
+[source] rows=63,399,144 (2,379/s)  price=11,342,120  watermark=2021-11-10 17:29:21  late=0  idle_adv=0
+[source] rows=63,410,176 (2,201/s)  price=11,343,538  watermark=2021-11-10 17:29:26  late=0  idle_adv=0
+[source] rows=63,422,456 (2,407/s)  price=11,347,104  watermark=2021-11-10 17:29:31  late=0  idle_adv=0
+[source] rows=63,431,080 (1,712/s)  price=11,348,384  watermark=2021-11-10 17:29:36  late=0  idle_adv=0
+[source] rows=63,439,640 (1,702/s)  price=11,349,551  watermark=2021-11-10 17:29:40  late=0  idle_adv=0
+[source] rows=63,457,880 (3,584/s)  price=11,353,359  watermark=2021-11-10 17:29:46  late=0  idle_adv=0
+[source] rows=63,468,728 (2,138/s)  price=11,354,564  watermark=2021-11-10 17:29:51  late=0  idle_adv=0
+[source] rows=63,479,728 (2,193/s)  price=11,355,965  watermark=2021-11-10 17:29:55  late=0  idle_adv=0
+[source] rows=63,509,016 (5,827/s)  price=11,359,576  watermark=2021-11-10 17:30:00  late=0  idle_adv=0
+[source] rows=63,525,736 (3,344/s)  price=11,360,372  watermark=2021-11-10 17:30:05  late=0  idle_adv=0
+[source] rows=63,533,592 (1,571/s)  price=11,361,452  watermark=2021-11-10 17:30:12  late=0  idle_adv=0
+[source] rows=63,540,840 (1,436/s)  price=11,364,786  watermark=2021-11-10 17:30:18  late=0  idle_adv=0
+[source] rows=63,544,512 (731/s)  price=11,365,444  watermark=2021-11-10 17:30:23  late=0  idle_adv=0
+[source] rows=63,548,096 (716/s)  price=11,366,049  watermark=2021-11-10 17:30:27  late=0  idle_adv=0
+[source] rows=63,557,392 (1,836/s)  price=11,369,216  watermark=2021-11-10 17:30:32  late=0  idle_adv=0
+[source] rows=63,564,592 (1,438/s)  price=11,369,872  watermark=2021-11-10 17:30:37  late=0  idle_adv=0
+[source] rows=63,571,720 (1,414/s)  price=11,370,643  watermark=2021-11-10 17:30:42  late=0  idle_adv=0
+[source] rows=63,583,384 (2,327/s)  price=11,373,684  watermark=2021-11-10 17:30:47  late=0  idle_adv=0
+[source] rows=63,590,576 (1,436/s)  price=11,374,464  watermark=2021-11-10 17:30:52  late=0  idle_adv=0
+[source] rows=63,596,704 (1,221/s)  price=11,375,218  watermark=2021-11-10 17:30:57  late=0  idle_adv=0
+[source] rows=63,608,784 (2,373/s)  price=11,378,315  watermark=2021-11-10 17:31:02  late=0  idle_adv=0
+[source] rows=63,616,888 (1,592/s)  price=11,380,474  watermark=2021-11-10 17:31:08  late=0  idle_adv=0
+[source] rows=63,621,632 (948/s)  price=11,381,226  watermark=2021-11-10 17:31:13  late=0  idle_adv=0
+[source] rows=63,628,864 (1,433/s)  price=11,384,238  watermark=2021-11-10 17:31:17  late=0  idle_adv=0
+[source] rows=63,633,424 (910/s)  price=11,384,999  watermark=2021-11-10 17:31:22  late=0  idle_adv=0
+[source] rows=63,638,144 (933/s)  price=11,385,795  watermark=2021-11-10 17:31:28  late=0  idle_adv=0
+[source] rows=63,645,224 (1,402/s)  price=11,388,837  watermark=2021-11-10 17:31:33  late=0  idle_adv=0
+[source] rows=63,649,480 (845/s)  price=11,389,611  watermark=2021-11-10 17:31:38  late=0  idle_adv=0
+[source] rows=63,653,256 (749/s)  price=11,390,380  watermark=2021-11-10 17:31:43  late=0  idle_adv=0
+[source] rows=63,659,160 (1,176/s)  price=11,393,410  watermark=2021-11-10 17:31:48  late=0  idle_adv=0
+[source] rows=63,662,768 (719/s)  price=11,394,164  watermark=2021-11-10 17:31:53  late=0  idle_adv=0
+[source] rows=63,666,792 (800/s)  price=11,394,954  watermark=2021-11-10 17:31:58  late=0  idle_adv=0
+[source] rows=63,672,768 (1,174/s)  price=11,398,068  watermark=2021-11-10 17:32:03  late=0  idle_adv=0
+[source] rows=63,676,312 (703/s)  price=11,398,967  watermark=2021-11-10 17:32:09  late=0  idle_adv=0
+[source] rows=63,679,320 (591/s)  price=11,399,561  watermark=2021-11-10 17:32:13  late=0  idle_adv=0
+[source] rows=63,685,072 (1,141/s)  price=11,402,626  watermark=2021-11-10 17:32:18  late=0  idle_adv=0
+[source] rows=63,688,816 (747/s)  price=11,403,391  watermark=2021-11-10 17:32:23  late=0  idle_adv=0
+[source] rows=63,692,824 (800/s)  price=11,404,752  watermark=2021-11-10 17:32:29  late=0  idle_adv=0
+[source] rows=63,699,160 (1,266/s)  price=11,407,497  watermark=2021-11-10 17:32:35  late=0  idle_adv=0
+[source] rows=63,701,880 (542/s)  price=11,408,405  watermark=2021-11-10 17:32:41  late=0  idle_adv=0
+[source] rows=63,703,720 (367/s)  price=11,408,709  watermark=2021-11-10 17:32:43  late=0  idle_adv=0
+[source] rows=63,710,928 (1,417/s)  price=11,411,917  watermark=2021-11-10 17:32:49  late=0  idle_adv=0
+[source] rows=63,714,016 (617/s)  price=11,412,816  watermark=2021-11-10 17:32:55  late=0  idle_adv=0
+[source] rows=63,717,256 (638/s)  price=11,413,874  watermark=2021-11-10 17:32:59  late=0  idle_adv=0
+[source] rows=63,722,640 (1,069/s)  price=11,416,699  watermark=2021-11-10 17:33:05  late=0  idle_adv=0
+[source] rows=63,726,032 (673/s)  price=11,417,518  watermark=2021-11-10 17:33:11  late=0  idle_adv=0
+[source] rows=63,728,424 (469/s)  price=11,418,927  watermark=2021-11-10 17:33:14  late=0  idle_adv=0
+[source] rows=63,733,720 (1,038/s)  price=11,421,249  watermark=2021-11-10 17:33:20  late=0  idle_adv=0
+[source] rows=63,736,688 (582/s)  price=11,421,968  watermark=2021-11-10 17:33:25  late=0  idle_adv=0
+[source] rows=63,739,928 (648/s)  price=11,422,706  watermark=2021-11-10 17:33:29  late=0  idle_adv=0
+[source] rows=63,746,136 (1,239/s)  price=11,425,807  watermark=2021-11-10 17:33:35  late=0  idle_adv=0
+[source] rows=63,749,336 (630/s)  price=11,426,609  watermark=2021-11-10 17:33:40  late=0  idle_adv=0
+[source] rows=63,751,792 (486/s)  price=11,427,737  watermark=2021-11-10 17:33:44  late=0  idle_adv=0
+[source] rows=63,757,472 (1,131/s)  price=11,430,248  watermark=2021-11-10 17:33:49  late=0  idle_adv=0
+[source] rows=63,761,592 (821/s)  price=11,431,156  watermark=2021-11-10 17:33:55  late=0  idle_adv=0
+[source] rows=63,764,632 (607/s)  price=11,431,807  watermark=2021-11-10 17:33:59  late=0  idle_adv=0
+[source] rows=63,772,400 (1,547/s)  price=11,434,816  watermark=2021-11-10 17:34:04  late=0  idle_adv=0
+[source] rows=63,775,848 (680/s)  price=11,435,817  watermark=2021-11-10 17:34:10  late=0  idle_adv=0
+[source] rows=63,778,552 (530/s)  price=11,436,663  watermark=2021-11-10 17:34:14  late=0  idle_adv=0
+[source] rows=63,784,320 (1,149/s)  price=11,439,456  watermark=2021-11-10 17:34:19  late=0  idle_adv=0
+[source] rows=63,788,744 (885/s)  price=11,440,212  watermark=2021-11-10 17:34:24  late=0  idle_adv=0
+[source] rows=63,793,184 (878/s)  price=11,441,427  watermark=2021-11-10 17:34:29  late=0  idle_adv=0
+[source] rows=63,799,968 (1,335/s)  price=11,444,072  watermark=2021-11-10 17:34:35  late=0  idle_adv=0
+[source] rows=63,803,736 (749/s)  price=11,444,788  watermark=2021-11-10 17:34:39  late=0  idle_adv=0
+[source] rows=63,808,856 (1,019/s)  price=11,446,043  watermark=2021-11-10 17:34:44  late=0  idle_adv=0
+[source] rows=63,817,552 (1,720/s)  price=11,448,578  watermark=2021-11-10 17:34:49  late=0  idle_adv=0
+[source] rows=63,822,792 (1,045/s)  price=11,449,337  watermark=2021-11-10 17:34:54  late=0  idle_adv=0
+[source] rows=63,832,544 (1,938/s)  price=11,449,850  watermark=2021-11-10 17:34:58  late=0  idle_adv=0
+[source] rows=63,865,328 (6,489/s)  price=11,459,326  watermark=2021-11-10 17:35:03  late=0  idle_adv=0
+[source] rows=63,886,736 (4,230/s)  price=11,466,393  watermark=2021-11-10 17:35:08  late=0  idle_adv=0
+[source] rows=63,901,936 (3,034/s)  price=11,471,121  watermark=2021-11-10 17:35:13  late=0  idle_adv=0
+[source] rows=63,923,040 (4,135/s)  price=11,480,217  watermark=2021-11-10 17:35:19  late=0  idle_adv=0
+[source] rows=63,938,144 (2,981/s)  price=11,485,941  watermark=2021-11-10 17:35:23  late=0  idle_adv=0
+[source] rows=63,962,776 (4,836/s)  price=11,495,714  watermark=2021-11-10 17:35:28  late=0  idle_adv=0
+[source] rows=63,971,288 (1,702/s)  price=11,501,226  watermark=2021-11-10 17:35:40  late=0  idle_adv=0
+[source] rows=63,972,624 (262/s)  price=11,502,251  watermark=2021-11-10 17:35:44  late=0  idle_adv=0
+[source] rows=63,973,872 (244/s)  price=11,503,475  watermark=2021-11-10 17:35:44  late=0  idle_adv=0
+[source] rows=63,977,448 (712/s)  price=11,506,280  watermark=2021-11-10 17:35:56  late=0  idle_adv=0
+[source] rows=63,978,640 (237/s)  price=11,507,205  watermark=2021-11-10 17:35:59  late=0  idle_adv=0
+[source] rows=63,979,848 (239/s)  price=11,508,390  watermark=2021-11-10 17:35:59  late=0  idle_adv=0
+[source] rows=63,983,576 (735/s)  price=11,511,528  watermark=2021-11-10 17:36:14  late=0  idle_adv=0
+[source] rows=63,984,536 (189/s)  price=11,512,425  watermark=2021-11-10 17:36:14  late=0  idle_adv=0
+[source] rows=63,985,576 (204/s)  price=11,513,455  watermark=2021-11-10 17:36:14  late=0  idle_adv=0
+[source] rows=63,988,976 (668/s)  price=11,516,414  watermark=2021-11-10 17:36:29  late=0  idle_adv=0
+[source] rows=63,989,920 (185/s)  price=11,517,357  watermark=2021-11-10 17:36:29  late=0  idle_adv=0
+[source] rows=63,990,816 (177/s)  price=11,518,246  watermark=2021-11-10 17:36:29  late=0  idle_adv=0
+[source] rows=63,993,976 (620/s)  price=11,521,236  watermark=2021-11-10 17:36:44  late=0  idle_adv=0
+[source] rows=63,994,776 (157/s)  price=11,522,034  watermark=2021-11-10 17:36:44  late=0  idle_adv=0
+[source] rows=63,995,576 (159/s)  price=11,522,831  watermark=2021-11-10 17:36:44  late=0  idle_adv=0
+[source] rows=63,998,704 (624/s)  price=11,525,793  watermark=2021-11-10 17:36:59  late=0  idle_adv=0
+[source] rows=63,999,528 (164/s)  price=11,526,611  watermark=2021-11-10 17:36:59  late=0  idle_adv=0
+[source] rows=64,000,328 (159/s)  price=11,527,410  watermark=2021-11-10 17:36:59  late=0  idle_adv=0
+[source] rows=64,003,536 (630/s)  price=11,530,467  watermark=2021-11-10 17:37:14  late=0  idle_adv=0
+[source] rows=64,004,496 (188/s)  price=11,531,423  watermark=2021-11-10 17:37:14  late=0  idle_adv=0
+[source] rows=64,005,136 (128/s)  price=11,532,063  watermark=2021-11-10 17:37:14  late=0  idle_adv=0
+[source] rows=64,008,424 (650/s)  price=11,535,128  watermark=2021-11-10 17:37:29  late=0  idle_adv=0
+[source] rows=64,009,288 (171/s)  price=11,535,991  watermark=2021-11-10 17:37:29  late=0  idle_adv=0
+[source] rows=64,012,400 (618/s)  price=11,539,011  watermark=2021-11-10 17:37:42  late=0  idle_adv=0
+[source] rows=64,013,216 (162/s)  price=11,539,792  watermark=2021-11-10 17:37:44  late=0  idle_adv=0
+[source] rows=64,014,008 (156/s)  price=11,540,583  watermark=2021-11-10 17:37:44  late=0  idle_adv=0
+[source] rows=64,017,088 (607/s)  price=11,543,584  watermark=2021-11-10 17:37:57  late=0  idle_adv=0
+[source] rows=64,017,896 (159/s)  price=11,544,357  watermark=2021-11-10 17:37:59  late=0  idle_adv=0
+[source] rows=64,018,680 (154/s)  price=11,545,125  watermark=2021-11-10 17:37:59  late=0  idle_adv=0
+[source] rows=64,021,872 (635/s)  price=11,547,600  watermark=2021-11-10 17:38:08  late=0  idle_adv=0
+[source] rows=64,023,040 (232/s)  price=11,548,303  watermark=2021-11-10 17:38:13  late=0  idle_adv=0
+[source] rows=64,024,176 (224/s)  price=11,549,312  watermark=2021-11-10 17:38:14  late=0  idle_adv=0
+[source] rows=64,027,760 (715/s)  price=11,552,168  watermark=2021-11-10 17:38:23  late=0  idle_adv=0
+[source] rows=64,028,832 (213/s)  price=11,552,924  watermark=2021-11-10 17:38:28  late=0  idle_adv=0
+[source] rows=64,030,096 (252/s)  price=11,554,146  watermark=2021-11-10 17:38:29  late=0  idle_adv=0
+[source] rows=64,033,384 (651/s)  price=11,557,350  watermark=2021-11-10 17:38:42  late=0  idle_adv=0
+[source] rows=64,034,192 (158/s)  price=11,558,115  watermark=2021-11-10 17:38:44  late=0  idle_adv=0
+[source] rows=64,034,976 (156/s)  price=11,558,895  watermark=2021-11-10 17:38:44  late=0  idle_adv=0
+[source] rows=64,038,088 (620/s)  price=11,561,931  watermark=2021-11-10 17:38:57  late=0  idle_adv=0
+[source] rows=64,038,880 (155/s)  price=11,562,690  watermark=2021-11-10 17:38:59  late=0  idle_adv=0
+[source] rows=64,039,672 (157/s)  price=11,563,481  watermark=2021-11-10 17:38:59  late=0  idle_adv=0
+[source] rows=64,043,008 (655/s)  price=11,566,719  watermark=2021-11-10 17:39:13  late=0  idle_adv=0
+[source] rows=64,043,848 (168/s)  price=11,567,532  watermark=2021-11-10 17:39:14  late=0  idle_adv=0
+[source] rows=64,044,616 (151/s)  price=11,568,300  watermark=2021-11-10 17:39:14  late=0  idle_adv=0
+[source] rows=64,047,696 (614/s)  price=11,571,336  watermark=2021-11-10 17:39:28  late=0  idle_adv=0
+[source] rows=64,048,472 (154/s)  price=11,572,084  watermark=2021-11-10 17:39:29  late=0  idle_adv=0
+[source] rows=64,049,248 (155/s)  price=11,572,859  watermark=2021-11-10 17:39:29  late=0  idle_adv=0
+[source] rows=64,052,352 (612/s)  price=11,575,898  watermark=2021-11-10 17:39:43  late=0  idle_adv=0
+[source] rows=64,053,128 (154/s)  price=11,576,643  watermark=2021-11-10 17:39:44  late=0  idle_adv=0
+[source] rows=64,053,904 (155/s)  price=11,577,419  watermark=2021-11-10 17:39:44  late=0  idle_adv=0
+[source] rows=64,057,016 (610/s)  price=11,580,459  watermark=2021-11-10 17:39:58  late=0  idle_adv=0
+[source] rows=64,057,792 (152/s)  price=11,580,741  watermark=2021-11-10 17:39:59  late=0  idle_adv=0
+[source] rows=64,058,576 (157/s)  price=11,580,741  watermark=2021-11-10 17:39:59  late=0  idle_adv=0
+[source] rows=64,082,208 (4,682/s)  price=11,585,127  watermark=2021-11-10 17:40:14  late=0  idle_adv=0
+[source] rows=64,082,984 (155/s)  price=11,585,876  watermark=2021-11-10 17:40:14  late=0  idle_adv=0
+[source] rows=64,083,744 (151/s)  price=11,586,636  watermark=2021-11-10 17:40:14  late=0  idle_adv=0
+[source] rows=64,086,832 (614/s)  price=11,589,690  watermark=2021-11-10 17:40:29  late=0  idle_adv=0
+[source] rows=64,087,600 (153/s)  price=11,590,431  watermark=2021-11-10 17:40:29  late=0  idle_adv=0
+[source] rows=64,088,360 (149/s)  price=11,591,191  watermark=2021-11-10 17:40:29  late=0  idle_adv=0
+[source] rows=64,091,456 (617/s)  price=11,594,256  watermark=2021-11-10 17:40:44  late=0  idle_adv=0
+[source] rows=64,092,224 (152/s)  price=11,594,996  watermark=2021-11-10 17:40:44  late=0  idle_adv=0
+[source] rows=64,092,984 (151/s)  price=11,595,756  watermark=2021-11-10 17:40:44  late=0  idle_adv=0
+[source] rows=64,096,064 (604/s)  price=11,598,811  watermark=2021-11-10 17:40:59  late=0  idle_adv=0
+[source] rows=64,096,832 (152/s)  price=11,599,550  watermark=2021-11-10 17:40:59  late=0  idle_adv=0
+[source] rows=64,097,752 (183/s)  price=11,600,465  watermark=2021-11-10 17:40:59  late=0  idle_adv=0
+[source] rows=64,100,920 (622/s)  price=11,603,574  watermark=2021-11-10 17:41:14  late=0  idle_adv=0
+[source] rows=64,101,696 (152/s)  price=11,604,342  watermark=2021-11-10 17:41:14  late=0  idle_adv=0
+[source] rows=64,102,456 (150/s)  price=11,605,102  watermark=2021-11-10 17:41:14  late=0  idle_adv=0
+[source] rows=64,105,536 (607/s)  price=11,608,139  watermark=2021-11-10 17:41:29  late=0  idle_adv=0
+[source] rows=64,106,296 (149/s)  price=11,608,890  watermark=2021-11-10 17:41:29  late=0  idle_adv=0
+[source] rows=64,107,064 (153/s)  price=11,609,655  watermark=2021-11-10 17:41:29  late=0  idle_adv=0
+[source] rows=64,110,184 (622/s)  price=11,612,703  watermark=2021-11-10 17:41:44  late=0  idle_adv=0
+[source] rows=64,110,952 (151/s)  price=11,613,463  watermark=2021-11-10 17:41:44  late=0  idle_adv=0
+[source] rows=64,111,712 (149/s)  price=11,614,220  watermark=2021-11-10 17:41:44  late=0  idle_adv=0
+[source] rows=64,114,816 (612/s)  price=11,617,272  watermark=2021-11-10 17:41:59  late=0  idle_adv=0
+[source] rows=64,115,600 (156/s)  price=11,618,033  watermark=2021-11-10 17:41:59  late=0  idle_adv=0
+[source] rows=64,116,360 (150/s)  price=11,618,782  watermark=2021-11-10 17:41:59  late=0  idle_adv=0
+{
+  "wall_s": 1141.1929280757904,
+  "rows": 64116664,
+  "price_events": 11619082,
+  "throughput_rows_per_s": 56183.89531041836,
+  "throughput_price_events_per_s": 10181.522960882157,
+  "load_imbalance": 1.1673152835998575,
+  "result_latency_s": {
+    "p50": 0.10910391807556152,
+    "p90": 0.13127560615539552,
+    "p99": 0.2325265312194824,
+    "p99.9": 0.24114653348922754,
+    "max": 0.24537420272827148,
+    "mean": 0.11013120304454457
+  },
+  "cpu_process_tree_pct": {
+    "p50": 8.7,
+    "p90": 82.17999999999999,
+    "p99": 100.30399999999996,
+    "p99.9": 116.30760000000028,
+    "max": 121.1,
+    "mean": 26.162306610407878
+  },
+  "late_dropped": 0,
+  "stale_timestamp_dropped": 0
+}
