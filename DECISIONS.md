@@ -198,5 +198,30 @@ Numbers from the first ~13M rows of Monday; re-run on the full week for the repo
   mean 1,850/s (p99 5,500, max 10,285); price events mean 343/s (p99 2,545, max 3,106);
   price events per (symbol, 5-min window): median 20, p99 300, max 1,610.
 
+- **I15. Live mode: real-time socket feed (user request, branch `live-socket`).** Extension of
+  D3: besides replaying files as fast as possible, the data can be fed at its real arrival rate.
+  * `scripts/feed_server.py` is a TCP server that plays the day files back at their arrival
+    rate (system Date + Time), xS faster if wanted: plain text, the CSV header first, then one
+    CSV line per event in file order (all three exchanges interleaved, as in the files).
+    `--fast-until` sends the morning without pacing (EMA history), `--until` stops the feed.
+  * The feeder paces on a robust clock, not the raw stamps: file order is the arrival order,
+    but some rows have bogus Date+Time (00:00:00 placeholders, the opening snapshot including
+    several hundred rows with the previous evening's ~17:35 time, scattered far-future values,
+    the Xetra closing-auction rows above). Measured on Mon/Wed/Fri, far-ahead rows occur in runs
+    of at most ~540 rows, so the clock = running max of the median of the last ~4000 stamps
+    (sampled every 8th row): at most ~5 min ahead (briefly, at the file start), typically ~1 s
+    behind true time, so the feed runs ~1 s late, consistently.
+  * `SocketSource` (`--socket HOST:PORT`) reuses the file source's transform (filters, event
+    time, late filtering, routing); only batching differs: a batch is cut every `--flush-ms`
+    (default 100) or when a block is full, so a slow feed is not held back waiting for 16 MB.
+  * Idle watermark: without data the watermark would never move (event-time only), so after
+    `--idle-ms` (default 2000) without data, event time advances with the wall clock x
+    `--clock-rate` (the feeder's speed). Open windows then still close when the market is quiet.
+  * Latency metrics start when the batch's first byte arrived, so they include the flush delay.
+  * Checked: Wed 00:00-10:00 (09:00-10:00 at 60x, 8.45M rows) with `--emit-all` gives the same
+    64,376 windows as the reference on the same rows (EMA rel. diff <= 7e-15); 0 late events.
+  * Not done: fault tolerance/checkpointing; the dashboard still reads the outputs written at
+    the end of a run (advisories are written live to `advisories_live.jsonl` and printed).
+
 ## Open questions
 - Default K for the warm-up (currently 38) once full-week crossover counts are known.

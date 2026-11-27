@@ -13,7 +13,7 @@ CORE_ORDER = [0, 2, 4, 6, 8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 1, 3, 5, 7, 9, 
 
 def main():
     ap = argparse.ArgumentParser(prog="tickstream")
-    ap.add_argument("files", nargs="+", help="CSV day files (globs allowed), processed in order")
+    ap.add_argument("files", nargs="*", help="CSV day files (globs allowed), processed in order")
     ap.add_argument("--out", default="results/runs/default")
     ap.add_argument("--workers", type=int, default=None, help="default: number of cores")
     ap.add_argument("--cores", type=int, default=None, help="pin run to this many cores")
@@ -31,7 +31,16 @@ def main():
     ap.add_argument("--preload", action="store_true",
                     help="parse everything first, then stream from memory (processing-only)")
     ap.add_argument("--no-bars", action="store_true", help="do not build 1-minute OHLC bars")
+    ap.add_argument("--socket", default=None, metavar="HOST:PORT",
+                    help="live mode: read CSV lines from a TCP feed (scripts/feed_server.py)")
+    ap.add_argument("--flush-ms", type=int, default=100, help="live mode: max batching delay")
+    ap.add_argument("--idle-ms", type=int, default=2000,
+                    help="live mode: advance event time on the wall clock after this idle gap")
+    ap.add_argument("--clock-rate", type=float, default=1.0,
+                    help="live mode: event-time speed relative to wall clock (= feeder --speed)")
     a = ap.parse_args()
+    if not a.files and not a.socket:
+        ap.error("give CSV files or --socket HOST:PORT")
 
     files = []
     for f in a.files:
@@ -44,6 +53,7 @@ def main():
         block_size=int(a.block_mb * (1 << 20)), max_rows=a.max_rows, source_threads=a.source_threads,
         preload=a.preload, minute_bars=not a.no_bars,
         stale_ms=None if a.stale_ms < 0 else a.stale_ms,
+        socket=a.socket, flush_ms=a.flush_ms, idle_ms=a.idle_ms, clock_rate=a.clock_rate,
     )
     m = run(cfg)
     keys = ["wall_s", "rows", "price_events", "throughput_rows_per_s", "throughput_price_events_per_s",

@@ -58,6 +58,11 @@ python scripts/validate.py results/runs/week_all/windows.parquet results/referen
 # experiments
 python scripts/bench.py C:/data/debs2022/debs2022-gc-trading-day-09-11-21.csv --exp cores preload partition --warmup-run --tag tue
 
+# live mode: real-time TCP feed (two terminals). The feeder replays a day at its real arrival
+# rate (--speed S = S x faster); the processor's --clock-rate should match the speed.
+python scripts/feed_server.py C:/data/debs2022/debs2022-gc-trading-day-10-11-21.csv --port 9000 --speed 1 --fast-until 09:00
+python -m tickstream --socket 127.0.0.1:9000 --clock-rate 1 --cores 4 --out results/runs/live
+
 # dashboard
 streamlit run dashboard/app.py
 
@@ -78,6 +83,10 @@ Important options of `python -m tickstream`:
 | `--preload` | Processing-only mode |
 | `--block-mb` | Source block size |
 | `--no-bars` | Do not build 1-minute OHLC bars for subscribed symbols |
+| `--socket HOST:PORT` | Live mode: read CSV lines from a TCP feed instead of files |
+| `--flush-ms` | Live mode: cut a batch at least this often (default 100) |
+| `--idle-ms` | Live mode: advance event time on the wall clock after this idle gap (default 2000) |
+| `--clock-rate` | Live mode: event-time speed relative to the wall clock (= feeder `--speed`) |
 
 Outputs in `--out`:
 

@@ -60,14 +60,19 @@ def pct(a, qs=(50, 90, 99, 99.9)):
 def source_main(cfg: RunConfig, worker_queues, results_q):
     pin(cfg.cores)
     import pyarrow as pa
-    from .source import Partitioner, Source
+    from .source import Partitioner, SocketSource, Source
     threads = cfg.source_threads or (len(cfg.cores) if cfg.cores else None)
     if threads:
         pa.set_cpu_count(threads)
     weights = load_weights(cfg.weights_file) if cfg.partitioning == "balanced" else None
     part = Partitioner(cfg.workers, cfg.partitioning, weights)
-    src = Source(cfg.files, cfg.workers, part, cfg.lateness_ms, cfg.block_size, cfg.max_rows,
-                 use_threads=(threads or 2) > 1, stale_ms=cfg.stale_ms)
+    if cfg.socket:
+        src = SocketSource(cfg.socket, cfg.workers, part, cfg.lateness_ms, cfg.block_size,
+                           flush_ms=cfg.flush_ms, idle_ms=cfg.idle_ms, clock_rate=cfg.clock_rate,
+                           stale_ms=cfg.stale_ms)
+    else:
+        src = Source(cfg.files, cfg.workers, part, cfg.lateness_ms, cfg.block_size, cfg.max_rows,
+                     use_threads=(threads or 2) > 1, stale_ms=cfg.stale_ms)
     subs = load_subscriptions(cfg.subscriptions_file)
     batches = src.batches()
     if cfg.preload:
@@ -249,6 +254,13 @@ def run(cfg: RunConfig) -> dict:
                         latency_ms=round((now - t_read) * 1000, 2))) + "\n")
                 if len(adv):
                     live.flush()
+                if cfg.socket:
+                    for i in adv:
+                        s = int(res["sym"][i])
+                        print(f"[sink] {_fmt_ts((int(res['win'][i]) + 1) * WINDOW_MS)} "
+                              f"{'BUY ' if res['advice'][i] > 0 else 'SELL'} {names.get(s, s):<16} "
+                              f"close={res['close'][i]:.4f}  latency={(now - t_read) * 1000:.0f} ms",
+                              flush=True)
         elif kind == "symstats":
             sym_stats.append(msg[1:])
         elif kind == "bars":

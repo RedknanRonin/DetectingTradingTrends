@@ -25,4 +25,8 @@ class RunConfig:
     live_advisories: bool = True     # append advisories to a JSONL file while running
     minute_bars: bool = True         # 1-min OHLC bars of subscribed symbols (dashboard)
     preload: bool = False            # parse all input first, then stream from memory
+    socket: str | None = None        # live mode: read CSV lines from host:port instead of files
+    flush_ms: int = 100              # live mode: cut a batch at least this often
+    idle_ms: int = 2000              # live mode: advance event time on wall clock after this idle gap
+    clock_rate: float = 1.0          # live mode: event-time ms per wall ms (= feeder --speed)
     extra: dict = field(default_factory=dict)

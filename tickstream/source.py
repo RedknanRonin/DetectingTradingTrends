@@ -9,6 +9,8 @@ Per CSV block (D10):
   * split the block by partition (D9) preserving per-symbol order.
 """
 import datetime as dt
+import select
+import socket
 import time
 import zlib
 
@@ -57,12 +59,16 @@ def open_csv(path: str, block_size: int, use_threads: bool = True, invalid_rows=
         parse_options=pacsv.ParseOptions(invalid_row_handler=invalid_rows),
         read_options=pacsv.ReadOptions(skip_rows=HEADER_SKIP_ROWS + 2, column_names=names,
                                        block_size=block_size, use_threads=use_threads),
-        convert_options=pacsv.ConvertOptions(
-            include_columns=SOURCE_COLUMNS,
-            strings_can_be_null=True,  # empty field -> null (needed for coalesce / validity)
-            column_types={c: pa.string() for c in SOURCE_COLUMNS if c != COL_LAST}
-            | {COL_LAST: pa.float64()},
-        ),
+        convert_options=convert_options(),
+    )
+
+
+def convert_options():
+    return pacsv.ConvertOptions(
+        include_columns=SOURCE_COLUMNS,
+        strings_can_be_null=True,  # empty field -> null (needed for coalesce / validity)
+        column_types={c: pa.string() for c in SOURCE_COLUMNS if c != COL_LAST}
+        | {COL_LAST: pa.float64()},
     )
 
 
@@ -269,3 +275,130 @@ class Source:
                              np.split(price[order], bounds)):
             parts.append((s, tt_, p) if len(s) else None)
         return parts, new
+
+
+class SocketSource(Source):
+    """Live variant of the source: reads CSV lines from a TCP socket (scripts/feed_server.py).
+
+    Same transform (filters, event time, late filtering, routing) as the file source; only
+    batching differs, because a live feed is slow compared with a file:
+      * a batch is cut every `flush_ms` (time-based) or when `block_size` bytes are buffered,
+        whichever comes first, so a quiet feed does not wait for a full block;
+      * idle watermark: if no data arrives for `idle_ms`, event time is advanced with the wall
+        clock (x `clock_rate`, the feeder's replay speed) so open windows still close when the
+        whole market goes quiet. Without data the watermark would otherwise never move.
+    The batch timestamp passed downstream is the wall time its first byte arrived, so the
+    latency metrics include the buffering delay of up to `flush_ms`.
+    """
+
+    def __init__(self, address: str, n_workers, partitioner, lateness_ms, block_size,
+                 flush_ms=100, idle_ms=2000, clock_rate=1.0, stale_ms=STALE_MS_DEFAULT,
+                 status_s=5.0):
+        super().__init__([], n_workers, partitioner, lateness_ms, block_size, stale_ms=stale_ms)
+        host, port = address.rsplit(":", 1)
+        self.address = (host or "127.0.0.1", int(port))
+        self.flush_s = flush_ms / 1000
+        self.idle_s = idle_ms / 1000
+        self.clock_rate = clock_rate
+        self.status_s = status_s
+        self.stats |= dict(idle_advances=0, bytes=0)
+        self._clock_wall = None  # wall time at which max_t was last set by real data
+
+    def _connect(self, timeout_s=30.0):
+        t_end = time.time() + timeout_s
+        while True:
+            try:
+                return socket.create_connection(self.address, timeout=5)
+            except OSError:
+                if time.time() > t_end:
+                    raise
+                time.sleep(0.5)
+
+    def _parse(self, chunk: bytes):
+        return pacsv.read_csv(
+            pa.BufferReader(chunk),
+            read_options=pacsv.ReadOptions(column_names=self.names, use_threads=False),
+            parse_options=pacsv.ParseOptions(invalid_row_handler=self.invalid_rows),
+            convert_options=convert_options(),
+        ).combine_chunks().to_batches()
+
+    def batches(self):
+        sock = self._connect()
+        print(f"[source] connected to {self.address[0]}:{self.address[1]}", flush=True)
+        buf = bytearray()
+        while b"\n" not in buf:  # first line = CSV header
+            data = sock.recv(65536)
+            if not data:
+                return
+            buf += data
+        nl = buf.index(b"\n")
+        self.names = [c.strip() for c in buf[:nl].decode().rstrip("\r").split(",")] + ["_trailing"]
+        del buf[: nl + 1]
+        sock.setblocking(False)
+        first_arrival = time.time() if buf else None
+        last_flush = last_data = last_status = time.time()
+        rows_at_status = 0
+        eof = False
+        while True:
+            now = time.time()
+            wait = max(0.0, min(last_flush + self.flush_s, last_data + self.idle_s) - now)
+            readable, _, _ = select.select([sock], [], [], wait)
+            now = time.time()
+            if readable:
+                try:
+                    data = sock.recv(1 << 20)
+                except BlockingIOError:
+                    data = None
+                except ConnectionResetError:  # feeder gone: treat as end of stream
+                    data = b""
+                if data:
+                    if first_arrival is None:
+                        first_arrival = now
+                    buf += data
+                    self.stats["bytes"] += len(data)
+                    last_data = now
+                elif data == b"":
+                    eof = True
+            due = now - last_flush >= self.flush_s or len(buf) >= self.block_size
+            if buf and (due or eof):
+                cut = len(buf) if eof else buf.rfind(b"\n") + 1
+                if cut > 0:
+                    chunk = bytes(buf[:cut])
+                    del buf[:cut]
+                    t0 = time.time()
+                    batches = self._parse(chunk)
+                    t1 = time.time()
+                    self.stats["read_s"] += t1 - t0
+                    max_before = self.max_t
+                    for rb in batches:
+                        parts, new = self.transform(rb)
+                        self.stats["batches"] += 1
+                        yield first_arrival, parts, new, self.watermark
+                    if self.max_t != max_before:
+                        self._clock_wall = now
+                    self.stats["transform_s"] += time.time() - t1
+                    self.stats["invalid_rows_skipped"] = self.invalid_rows.count
+                    first_arrival = now if buf else None
+                last_flush = now
+            elif not buf:
+                last_flush = now
+            if eof:
+                return
+            if (now - last_data >= self.idle_s and self._clock_wall is not None
+                    and self.max_t != _NO_TIME):
+                clock = self.max_t + int((now - self._clock_wall) * 1000 * self.clock_rate)
+                if clock > self.max_t:
+                    self.max_t = clock
+                    self._clock_wall = now
+                    self.stats["idle_advances"] += 1
+                    yield now, [None] * self.n_workers, [], self.watermark
+                last_data = now  # next idle check after another idle_s
+            if self.status_s and now - last_status >= self.status_s:
+                rate = (self.stats["rows"] - rows_at_status) / (now - last_status)
+                wm = self.watermark
+                wm_s = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(wm / 1000)) if wm else "-"
+                print(f"[source] rows={self.stats['rows']:,} ({rate:,.0f}/s)  "
+                      f"price={self.stats['price_events']:,}  watermark={wm_s}  "
+                      f"late={self.stats['late_dropped']}  idle_adv={self.stats['idle_advances']}",
+                      flush=True)
+                last_status, rows_at_status = now, self.stats["rows"]
