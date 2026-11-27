@@ -62,6 +62,7 @@ python scripts/bench.py C:/data/debs2022/debs2022-gc-trading-day-09-11-21.csv --
 # rate (--speed S = S x faster); the processor's --clock-rate should match the speed.
 python scripts/feed_server.py C:/data/debs2022/debs2022-gc-trading-day-10-11-21.csv --port 9000 --speed 1 --fast-until 09:00
 python -m tickstream --socket 127.0.0.1:9000 --clock-rate 1 --cores 4 --out results/runs/live
+# ...and `streamlit run dashboard/app.py`: the run appears as "live ● LIVE" and the views follow it
 
 # dashboard
 streamlit run dashboard/app.py
@@ -97,6 +98,7 @@ Outputs in `--out`:
 | `bars.parquet` | 1-minute OHLC bars of subscribed symbols (for the dashboard) |
 | `symbols.parquet` | Per symbol (all): SecType, price events, windows, owning worker |
 | `advisories_live.jsonl` | Advisories written while the run is in progress |
+| `live_status.json` | Live mode: feed clock, event rate and counters, refreshed every 2 s |
 | `metrics.json` | Run metrics |
 | `cpu_timeline.csv` | CPU utilisation over time |
 

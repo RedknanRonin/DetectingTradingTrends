@@ -82,7 +82,14 @@ def source_main(cfg: RunConfig, worker_queues, results_q):
     t_start = time.time()
     results_q.put(("stream_start", t_start))
     seq = 0
+    last_status = 0.0
     for t_read, parts, new_syms, wm in batches:
+        if cfg.socket and time.time() - last_status >= 0.25:  # live progress for the dashboard
+            last_status = time.time()
+            results_q.put(("status", last_status, dict(
+                rows=src.stats["rows"], price_events=src.stats["price_events"],
+                late_dropped=src.stats["late_dropped"], watermark_ms=wm,
+                idle_advances=src.stats.get("idle_advances", 0))))
         if cfg.preload:
             t_read = time.time()  # latency measured from the moment the batch is emitted
         if new_syms:
@@ -200,6 +207,12 @@ class CpuSampler(threading.Thread):
 def run(cfg: RunConfig) -> dict:
     out = Path(cfg.out_dir)
     out.mkdir(parents=True, exist_ok=True)
+    if cfg.socket:  # live outputs are read while running: drop a previous run's end-of-run files
+        for name in ("symbols.parquet", "metrics.json", "cpu_timeline.csv", "live_status.json"):
+            try:
+                (out / name).unlink(missing_ok=True)
+            except PermissionError:
+                pass
     pin(cfg.cores)
     ctx = mp.get_context("spawn")
     worker_queues = [ctx.Queue(maxsize=cfg.queue_size) for _ in range(cfg.workers)]
@@ -223,9 +236,35 @@ def run(cfg: RunConfig) -> dict:
     live = open(out / "advisories_live.jsonl", "w") if cfg.live_advisories else None
     t_first_result = None
     t_stream_start = None
-    while len(worker_stats) < cfg.workers or source_stats is None:
+    status, prev_status = None, None
+    last_snap = 0.0
+
+    def snapshot(final=False):
+        # Live mode: rewrite the dashboard inputs while the run is in progress (atomic
+        # replace, so the dashboard never reads a half-written file).
+        rate = None
+        if status and prev_status and status[0] > prev_status[0]:
+            rate = (status[1]["rows"] - prev_status[1]["rows"]) / (status[0] - prev_status[0])
         try:
-            msg = results_q.get(timeout=2.0)
+            _write_results(out, chunks, names, sectypes, atomic=True)
+            _write_bars(out, bar_chunks, names, atomic=True)
+        except PermissionError:  # file momentarily held open by a reader (Windows): next time
+            return
+        info = dict(live=not final, updated=time.time(), feed=cfg.socket,
+                    clock_rate=cfg.clock_rate, rows_per_s=rate,
+                    windows_emitted=int(sum(len(c["sym"]) for c in chunks)),
+                    advisories=int(sum(int((c["advice"] != 0).sum()) for c in chunks)),
+                    **(status[1] if status else {}))
+        tmp = out / "live_status.json.tmp"
+        tmp.write_text(json.dumps(info))
+        tmp.replace(out / "live_status.json")
+
+    while len(worker_stats) < cfg.workers or source_stats is None:
+        if cfg.socket and time.time() - last_snap >= cfg.snapshot_s:
+            snapshot()
+            last_snap = time.time()
+        try:
+            msg = results_q.get(timeout=0.5 if cfg.socket else 2.0)
         except queue.Empty:
             dead = [p for p in procs if p.exitcode not in (None, 0)]
             if dead:
@@ -265,6 +304,8 @@ def run(cfg: RunConfig) -> dict:
             sym_stats.append(msg[1:])
         elif kind == "bars":
             bar_chunks.append(msg[2])
+        elif kind == "status":
+            prev_status, status = status, (msg[1], msg[2])
         elif kind == "stream_start":
             t_stream_start = msg[1]
         elif kind == "worker_stats":
@@ -284,6 +325,8 @@ def run(cfg: RunConfig) -> dict:
     _write_results(out, chunks, names, sectypes)
     _write_bars(out, bar_chunks, names)
     _write_symbols(out, sym_stats, names, sectypes)
+    if cfg.socket:
+        snapshot(final=True)
     cpu = np.array([(s[1], s[2]) for s in sampler.samples]) if sampler.samples else np.zeros((0, 2))
     ev = [worker_stats[w]["events"] for w in range(cfg.workers)]
     close_lat = np.concatenate([np.asarray(worker_stats[w].pop("close_latency_raw"), dtype=float)
@@ -334,18 +377,27 @@ def _write_symbols(out: Path, stats, names, sectypes):
     )).sort("price_events", descending=True).write_parquet(out / "symbols.parquet")
 
 
-def _write_bars(out: Path, chunks, names):
+def _replace_parquet(df, path: Path, atomic: bool):
+    if not atomic:
+        df.write_parquet(path)
+        return
+    tmp = path.with_suffix(".tmp")
+    df.write_parquet(tmp)
+    tmp.replace(path)
+
+
+def _write_bars(out: Path, chunks, names, atomic=False):
     import polars as pl
     if not chunks:
         return
     cols = {k: np.concatenate([c[k] for c in chunks]) for k in chunks[0]}
-    pl.DataFrame(cols).with_columns(
+    _replace_parquet(pl.DataFrame(cols).with_columns(
         symbol=pl.Series([names.get(int(s), str(s)) for s in cols["sym"]], dtype=pl.Utf8),
         minute_start=pl.from_epoch(pl.Series(cols["minute"].astype(np.int64) * 60_000), time_unit="ms"),
-    ).sort(["symbol", "minute"]).write_parquet(out / "bars.parquet")
+    ).sort(["symbol", "minute"]), out / "bars.parquet", atomic)
 
 
-def _write_results(out: Path, chunks, names, sectypes):
+def _write_results(out: Path, chunks, names, sectypes, atomic=False):
     import polars as pl
     if chunks:
         cols = {k: np.concatenate([c[k] for c in chunks]) for k in chunks[0]}
@@ -356,5 +408,5 @@ def _write_results(out: Path, chunks, names, sectypes):
         sectype=pl.Series([sectypes.get(int(s)) for s in cols["sym"]], dtype=pl.Utf8),
         window_start=pl.from_epoch(pl.Series(cols["win"].astype(np.int64) * WINDOW_MS), time_unit="ms"),
     ).sort(["symbol", "win"])
-    df.write_parquet(out / "windows.parquet")
-    df.filter(pl.col("advice") != 0).write_parquet(out / "advisories.parquet")
+    _replace_parquet(df, out / "windows.parquet", atomic)
+    _replace_parquet(df.filter(pl.col("advice") != 0), out / "advisories.parquet", atomic)

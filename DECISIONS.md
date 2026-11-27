@@ -220,8 +220,14 @@ Numbers from the first ~13M rows of Monday; re-run on the full week for the repo
   * Latency metrics start when the batch's first byte arrived, so they include the flush delay.
   * Checked: Wed 00:00-10:00 (09:00-10:00 at 60x, 8.45M rows) with `--emit-all` gives the same
     64,376 windows as the reference on the same rows (EMA rel. diff <= 7e-15); 0 late events.
-  * Not done: fault tolerance/checkpointing; the dashboard still reads the outputs written at
-    the end of a run (advisories are written live to `advisories_live.jsonl` and printed).
+  * Live dashboard (user request): in live mode the sink rewrites windows/advisories/bars
+    every `snapshot_s` (2 s) with an atomic replace, plus `live_status.json` (feed clock =
+    watermark, events/s, counters; `live: false` at the end). The dashboard marks such runs
+    LIVE, reruns when a new snapshot appears and keeps the time cursor at the newest data
+    ("Follow live"; replay controls disabled). Switching it off allows replay while data
+    keeps arriving. Checked in a browser at 60x: snapshots 1-2 s old, 0 late events.
+  * Not done: fault tolerance/checkpointing. Per-symbol activity (symbols.parquet) is only
+    written at the end, so during a live run the tiers fall back to window counts.
 
 ## Open questions
 - Default K for the warm-up (currently 38) once full-week crossover counts are known.

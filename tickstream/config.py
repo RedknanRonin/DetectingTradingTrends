@@ -29,4 +29,5 @@ class RunConfig:
     flush_ms: int = 100              # live mode: cut a batch at least this often
     idle_ms: int = 2000              # live mode: advance event time on wall clock after this idle gap
     clock_rate: float = 1.0          # live mode: event-time ms per wall ms (= feeder --speed)
+    snapshot_s: float = 2.0          # live mode: rewrite dashboard outputs this often
     extra: dict = field(default_factory=dict)

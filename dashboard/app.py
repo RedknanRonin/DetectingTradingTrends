@@ -10,6 +10,10 @@ Views
   * Advisory feed - newest advisories first; live-tails advisories_live.jsonl while a run
                     is in progress.
   * Run metrics   - throughput, latency, CPU and per-worker load of the selected run.
+  * Live          - while a live run (--socket) is in progress the engine rewrites its
+                    outputs every few seconds; the dashboard detects this, shows a LIVE
+                    banner (feed clock, event rate) and follows the newest data (the cursor
+                    stays at "now"); switching off "Follow live" allows replay meanwhile.
   * Replay        - sidebar controls (start / previous / play-pause / next / end, a time
                     slider, step = 1 minute or 5 minutes, speed): every view shows the state
                     "as of" the selected time, so the week can be replayed; advisories from
@@ -39,8 +43,24 @@ def find_runs():
             return json.loads((run / "metrics.json").read_text())["config"]["emit_all"]
         except (OSError, KeyError, ValueError):
             return False
-    runs = {p.parent for p in RUNS.rglob("windows.parquet")}
-    return sorted(runs, key=lambda p: (emit_all(p), -p.stat().st_mtime))
+    runs = ({p.parent for p in RUNS.rglob("windows.parquet")}
+            | {p.parent for p in RUNS.rglob("live_status.json")})
+    return sorted(runs, key=lambda p: (live_info(p) is None, emit_all(p), -p.stat().st_mtime))
+
+
+LIVE_STALE_S = 10  # a live run whose status is older than this is treated as stopped
+
+
+def live_info(run: Path):
+    """Status of a live run in progress (dict), or None (finished / not a live run)."""
+    try:
+        info = json.loads((run / "live_status.json").read_text())
+    except (OSError, ValueError):
+        return None
+    import time
+    if not info.get("live") or time.time() - info.get("updated", 0) > LIVE_STALE_S:
+        return None
+    return info
 
 
 @st.cache_data(show_spinner=False)
@@ -97,13 +117,40 @@ if not runs:
     st.warning(f"No runs found under {RUNS}. Run `python -m tickstream ...` first.")
     st.stop()
 
+ss = st.session_state
+
 with st.sidebar:
     st.header("Run")
-    run = st.selectbox("Output directory", runs, format_func=lambda p: str(p.relative_to(RUNS)))
+    run = st.selectbox("Output directory", runs,
+                       format_func=lambda p: str(p.relative_to(RUNS)) + ("  ● LIVE" if live_info(p) else ""))
+    live = live_info(run)
+    if live is not None:
+        follow = st.toggle("Follow live", value=True, key="follow_live",
+                           help="Keep the time cursor at the newest data. Switch off to replay.")
+
+        @st.fragment(run_every=1.0)
+        def _live_watch():
+            # rerun the whole app when the engine has written a new snapshot
+            try:
+                m = (run / "live_status.json").stat().st_mtime
+            except OSError:
+                return
+            if ss.get("live_seen") != m:
+                first = ss.get("live_seen") is None
+                ss.live_seen = m
+                if not first:
+                    st.rerun(scope="app")
+
+        _live_watch()
+    else:
+        follow = False
     wpath = run / "windows.parquet"
-    df = load_windows(str(wpath), wpath.stat().st_mtime)
+    df = load_windows(str(wpath), wpath.stat().st_mtime) if wpath.exists() else pl.DataFrame()
     if df.is_empty():
-        st.info("This run emitted no window results (no subscribed symbols?).")
+        if live is not None:
+            st.info("Live run connected - waiting for the first window to close.")
+        else:
+            st.info("This run emitted no window results (no subscribed symbols?).")
         st.stop()
     sectypes = st.multiselect("Security type", ["E", "I"], default=["E", "I"],
                               format_func=lambda s: {"E": "Equity", "I": "Index"}[s])
@@ -134,11 +181,12 @@ with st.sidebar:
         times = pl.concat([win_ends, bar_ends]).unique().sort().to_list()
     else:
         times = win_ends.to_list()
-    ss = st.session_state
     # ss.pos (a datetime) is the source of truth; the slider widget mirrors it (a widget's
     # own state may not be changed by code after the widget is created, e.g. by the timer).
     if ss.get("replay_run") != str(run) or ss.get("pos") is None:
         ss.replay_run, ss.pos, ss.playing = str(run), times[-1], False
+    if follow:  # live: the cursor stays at the newest data
+        ss.pos, ss.playing = times[-1], False
     if ss.pos not in times:  # step size changed: snap to the latest time <= pos
         earlier = [t for t in times if t <= ss.pos]
         ss.pos = earlier[-1] if earlier else times[0]
@@ -155,20 +203,20 @@ with st.sidebar:
 
     unit = "minute" if step.startswith("1") else "window"
     b = st.columns(5)
-    b[0].button("⏮", on_click=_move, args=(0,), help="start", width="stretch")
-    b[1].button("◀", on_click=_move, args=(idx - 1,), help=f"previous {unit}", width="stretch")
+    b[0].button("⏮", on_click=_move, args=(0,), help="start", width="stretch", disabled=follow)
+    b[1].button("◀", on_click=_move, args=(idx - 1,), help=f"previous {unit}", width="stretch", disabled=follow)
     b[2].button("⏸" if ss.playing else "▶", on_click=_toggle_play, help="play / pause",
-                type="primary", width="stretch")
-    b[3].button("▶▶", on_click=_move, args=(idx + 1,), help=f"next {unit}", width="stretch")
+                type="primary", width="stretch", disabled=follow)
+    b[3].button("▶▶", on_click=_move, args=(idx + 1,), help=f"next {unit}", width="stretch", disabled=follow)
     b[4].button("⏭", on_click=_move, args=(len(times) - 1,), help="end (show all)",
-                width="stretch")
+                width="stretch", disabled=follow)
     ss.pos_slider = ss.pos
 
     def _slid():
         ss.pos = ss.pos_slider
 
     st.select_slider("Time", options=times, key="pos_slider", on_change=_slid,
-                     format_func=lambda t: f"{t:%a %d.%m %H:%M}")
+                     format_func=lambda t: f"{t:%a %d.%m %H:%M}", disabled=follow)
     speed = st.select_slider(f"Speed ({unit}s per second)", options=[1, 2, 5, 12, 36], value=2)
 
     import time as _time
@@ -196,6 +244,25 @@ with st.sidebar:
 
 df_all = df
 now = ss.pos
+if live is not None:
+    import time as _t
+    wm = live.get("watermark_ms")
+    rate = live.get("rows_per_s")
+    cols = st.columns([1.3, 1, 1, 1, 1])
+    cols[0].markdown(
+        f"<div style='background:{RED};color:white;border-radius:6px;padding:6px 10px;"
+        f"font-weight:600;display:inline-block'>● LIVE</div>&nbsp; feed <code>{live.get('feed')}</code>"
+        + (f" &nbsp;×{live['clock_rate']:g}" if live.get("clock_rate", 1) != 1 else ""),
+        unsafe_allow_html=True)
+    cols[1].metric("Feed clock" + (_t.strftime(" · %a %d.%m", _t.gmtime(wm / 1000)) if wm else ""),
+                   _t.strftime("%H:%M:%S", _t.gmtime(wm / 1000)) if wm else "-")
+    cols[1].caption("event time of the watermark")
+    cols[2].metric("Events/s", f"{rate:,.0f}" if rate is not None else "-")
+    cols[3].metric("Events received", f"{live.get('rows', 0):,}")
+    cols[4].metric("Advisories (subscribed)", f"{live.get('advisories', 0):,}")
+    st.caption(f"Snapshot {(_t.time() - live['updated']):.0f} s old · late events dropped: "
+               f"{live.get('late_dropped', 0)} · " + ("following live" if follow else
+                                                     "replaying (Follow live is off)"))
 df = df.filter(pl.col("window_start") + FIVE_MIN <= now)  # windows evaluated by "now"
 bars = (bars_all.filter(pl.col("minute_start") + ONE_MIN <= now) if bars_all is not None else None)
 fresh_after = now - FIVE_MIN  # advisories from windows that ended in the last 5 minutes are "new"
